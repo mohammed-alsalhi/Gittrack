@@ -391,3 +391,77 @@ export interface TrackerConfig {
   token: string;
   repoSlugs: string[];
 }
+
+export interface LocalGitRemote {
+  name: string;
+  fetchUrl?: string;
+  pushUrl?: string;
+}
+
+export interface LocalGitBranch {
+  name: string;
+  kind: "local" | "remote";
+  sha: string;
+  updatedAt: string;
+  ageDays: number;
+  author: string;
+  subject: string;
+  upstream?: string;
+  remote?: string;
+  ahead: number;
+  behind: number;
+  gone: boolean;
+  current: boolean;
+  stale: boolean;
+  worktreePath?: string;
+}
+
+export interface LocalGitWorktree {
+  path: string;
+  branch?: string;
+  head?: string;
+  detached: boolean;
+  bare: boolean;
+  clean: boolean;
+  dirtyCount: number;
+  stale: boolean;
+}
+
+export interface LocalGitSummary {
+  repoPath: string;
+  root: string;
+  repoName: string;
+  currentBranch: string;
+  defaultBranch: string;
+  generatedAt: string;
+  statusLine: string;
+  isDirty: boolean;
+  dirtyCount: number;
+  stagedCount: number;
+  unstagedCount: number;
+  untrackedCount: number;
+  staleThresholdDays: number;
+  remotes: LocalGitRemote[];
+  localBranches: LocalGitBranch[];
+  remoteBranches: LocalGitBranch[];
+  worktrees: LocalGitWorktree[];
+  graphLines: string[];
+}
+
+export interface TestingBranchFlag {
+  id: string;
+  key: string;
+  value: string;
+  enabled: boolean;
+}
+
+export interface TestingBranchSuite {
+  id: string;
+  repoPath: string;
+  name: string;
+  branches: string[];
+  command: string;
+  flags: TestingBranchFlag[];
+  notes: string;
+  updatedAt: string;
+}

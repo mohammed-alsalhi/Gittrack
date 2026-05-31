@@ -203,50 +203,57 @@ export function StackTopologyBoard({
             </div>
           </div>
 
-          <aside className="topology-command-panel">
-            <div className={`topology-next-card next-${nextMove?.tone ?? "green"}`}>
-              <span className="topology-next-icon">{nextMove && <nextMove.icon size={16} />}</span>
-              <div>
-                <span>Next safe move</span>
-                <strong>{nextMove?.label ?? "Stack is clear"}</strong>
-                <p>{nextMove?.detail ?? "No open pull request needs intervention in this lane."}</p>
+          <details className="topology-detail-drawer">
+            <summary>
+              <span>Stack details</span>
+              <strong>{nextMove?.label ?? "Stack is clear"}</strong>
+              <em>Show</em>
+            </summary>
+            <aside className="topology-command-panel">
+              <div className={`topology-next-card next-${nextMove?.tone ?? "green"}`}>
+                <span className="topology-next-icon">{nextMove && <nextMove.icon size={16} />}</span>
+                <div>
+                  <span>Next safe move</span>
+                  <strong>{nextMove?.label ?? "Stack is clear"}</strong>
+                  <p>{nextMove?.detail ?? "No open pull request needs intervention in this lane."}</p>
+                </div>
+                <button type="button" onClick={nextMove?.action} disabled={!nextMove} data-testid="topology-run-next">
+                  Run move
+                </button>
               </div>
-              <button type="button" onClick={nextMove?.action} disabled={!nextMove} data-testid="topology-run-next">
-                Run move
-              </button>
-            </div>
 
-            <div className="topology-focus-card">
-              <span>Selected node</span>
-              <strong>{selectedNode ? `#${selectedNode.pr.number} ${selectedNode.pr.title}` : "No active node"}</strong>
-              <div className="topology-focus-meta">
-                <Metric label="Risk" value={selectedNode?.intel.risk ?? "low"} />
-                <Metric label="Ready" value={selectedNode ? `${selectedNode.intel.readiness}/${selectedNode.intel.readinessTotal}` : "0/0"} />
-                <Metric label="Files" value={String(selectedNode?.intel.files.length ?? 0)} />
+              <div className="topology-focus-card">
+                <span>Selected node</span>
+                <strong>{selectedNode ? `#${selectedNode.pr.number} ${selectedNode.pr.title}` : "No active node"}</strong>
+                <div className="topology-focus-meta">
+                  <Metric label="Risk" value={selectedNode?.intel.risk ?? "low"} />
+                  <Metric label="Ready" value={selectedNode ? `${selectedNode.intel.readiness}/${selectedNode.intel.readinessTotal}` : "0/0"} />
+                  <Metric label="Files" value={String(selectedNode?.intel.files.length ?? 0)} />
+                </div>
+                <div className="topology-focus-actions">
+                  <button type="button" disabled={!selectedNode} onClick={() => selectedNode && onSelectPullRequest(selectedNode.pr.id)}>
+                    <GitPullRequest size={14} />
+                    Open PR
+                  </button>
+                  <button type="button" disabled={!selectedNode?.codexGap} onClick={() => selectedNode && onPromoteCodex(selectedNode.pr.id)}>
+                    <Sparkles size={14} />
+                    Promote AI
+                  </button>
+                  <button type="button" disabled={!selectedNode?.ready} onClick={() => selectedNode && onSmartMerge(selectedNode.pr.id)}>
+                    <GitMerge size={14} />
+                    Queue
+                  </button>
+                </div>
               </div>
-              <div className="topology-focus-actions">
-                <button type="button" disabled={!selectedNode} onClick={() => selectedNode && onSelectPullRequest(selectedNode.pr.id)}>
-                  <GitPullRequest size={14} />
-                  Open PR
-                </button>
-                <button type="button" disabled={!selectedNode?.codexGap} onClick={() => selectedNode && onPromoteCodex(selectedNode.pr.id)}>
-                  <Sparkles size={14} />
-                  Promote AI
-                </button>
-                <button type="button" disabled={!selectedNode?.ready} onClick={() => selectedNode && onSmartMerge(selectedNode.pr.id)}>
-                  <GitMerge size={14} />
-                  Queue
-                </button>
-              </div>
-            </div>
 
-            <div className="topology-gate-list" aria-label="Topology gates">
-              <GateRow icon={CheckCircle2} label="CI" value={gateLabel(selectedStack.nodes.every((node) => node.pr.ci !== "failure"), "passing", "failure")} ready={selectedStack.nodes.every((node) => node.pr.ci !== "failure")} />
-              <GateRow icon={Bot} label="Codex" value={selectedStack.codexGaps.length ? `${selectedStack.codexGaps.length} gaps` : "covered"} ready={!selectedStack.codexGaps.length} tone="purple" />
-              <GateRow icon={ShieldAlert} label="Review" value={selectedStack.blockers.length ? `${selectedStack.blockers.length} blockers` : "clean"} ready={!selectedStack.blockers.length} />
-              <GateRow icon={Route} label="Drift" value={selectedStack.drift.length ? `${selectedStack.drift.length} branches` : "fresh"} ready={!selectedStack.drift.length} tone="amber" onClick={onOpenBranchDrift} />
-            </div>
-          </aside>
+              <div className="topology-gate-list" aria-label="Topology gates">
+                <GateRow icon={CheckCircle2} label="CI" value={gateLabel(selectedStack.nodes.every((node) => node.pr.ci !== "failure"), "passing", "failure")} ready={selectedStack.nodes.every((node) => node.pr.ci !== "failure")} />
+                <GateRow icon={Bot} label="Codex" value={selectedStack.codexGaps.length ? `${selectedStack.codexGaps.length} gaps` : "covered"} ready={!selectedStack.codexGaps.length} tone="purple" />
+                <GateRow icon={ShieldAlert} label="Review" value={selectedStack.blockers.length ? `${selectedStack.blockers.length} blockers` : "clean"} ready={!selectedStack.blockers.length} />
+                <GateRow icon={Route} label="Drift" value={selectedStack.drift.length ? `${selectedStack.drift.length} branches` : "fresh"} ready={!selectedStack.drift.length} tone="amber" onClick={onOpenBranchDrift} />
+              </div>
+            </aside>
+          </details>
         </div>
       ) : (
         <div className="topology-empty-state">

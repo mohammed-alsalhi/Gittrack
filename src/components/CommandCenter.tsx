@@ -211,53 +211,58 @@ export function CommandCenter({
         </aside>
       )}
 
-      <div className="smart-command-queue" data-testid="smart-command-queue" aria-label="Smart command queue">
-        <div className="smart-command-lead">
-          <span>Command queue</span>
-          <strong>{commandQueue[0]?.title ?? "Workspace clear"}</strong>
-          <small>{commandQueue.length} live moves ranked by risk</small>
-        </div>
-        <div className="smart-command-grid">
-          {commandQueue.map((item) => {
-            const Icon = item.icon;
+      <details className="workspace-pulse-details">
+        <summary>
+          <span>Workspace pulse</span>
+          <strong>
+            {pulse.flowScore} flow · {pulse.mergeReady}/{pulse.mergeTotal} ready · {commandQueue.length} suggested moves
+          </strong>
+          <em>Show</em>
+        </summary>
 
-            return (
-              <button
-                type="button"
-                className={`smart-command-card command-${item.tone}`}
-                key={item.id}
-                onClick={item.run}
-                data-testid={`smart-command-${item.id}`}
-              >
-                <span className="smart-command-icon">
-                  <Icon size={14} />
-                </span>
-                <span className="smart-command-copy">
-                  <small>{item.label}</small>
-                  <strong>{item.title}</strong>
-                  <em>{item.detail}</em>
-                </span>
-                <b>{item.actionLabel}</b>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+        <div className="smart-command-queue" data-testid="smart-command-queue" aria-label="Smart command queue">
+          <div className="smart-command-grid">
+            {commandQueue.map((item) => {
+              const Icon = item.icon;
 
-      <div className="pulse-grid" aria-label="Workspace pulse">
-        <PulseCard label="Flow score" value={String(pulse.flowScore)} delta="+12 this week" tone="violet" />
-        <PulseCard
-          label="Merge readiness"
-          value={`${pulse.mergeReady} / ${pulse.mergeTotal}`}
-          delta="ready with checks"
-          tone="green"
-          progress={pulse.mergeReady / pulse.mergeTotal}
-        />
-        <PulseCard label="Stack depth" value={String(pulse.stackDepth)} delta="on main" tone="slate" />
-        <PulseCard label="Queue estimate" value={pulse.queueEstimate} delta="at current velocity" tone="amber" />
-        <PulseCard label="Review load" value={pulse.reviewLoad} delta="-30% vs last week" tone="green" />
-        <PulseCard label="PRs merged" value={String(pulse.mergedCount)} delta="+20% vs last week" tone="green" />
-      </div>
+              return (
+                <button
+                  type="button"
+                  className={`smart-command-card command-${item.tone}`}
+                  key={item.id}
+                  onClick={item.run}
+                  data-testid={`smart-command-${item.id}`}
+                >
+                  <span className="smart-command-icon">
+                    <Icon size={14} />
+                  </span>
+                  <span className="smart-command-copy">
+                    <small>{item.label}</small>
+                    <strong>{item.title}</strong>
+                    <em>{item.detail}</em>
+                  </span>
+                  <b>{item.actionLabel}</b>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="pulse-grid" aria-label="Workspace pulse">
+          <PulseCard label="Flow score" value={String(pulse.flowScore)} delta="+12 this week" tone="violet" />
+          <PulseCard
+            label="Merge readiness"
+            value={`${pulse.mergeReady} / ${pulse.mergeTotal}`}
+            delta="ready with checks"
+            tone="green"
+            progress={pulse.mergeReady / pulse.mergeTotal}
+          />
+          <PulseCard label="Stack depth" value={String(pulse.stackDepth)} delta="on main" tone="slate" />
+          <PulseCard label="Queue estimate" value={pulse.queueEstimate} delta="at current velocity" tone="amber" />
+          <PulseCard label="Review load" value={pulse.reviewLoad} delta="-30% vs last week" tone="green" />
+          <PulseCard label="PRs merged" value={String(pulse.mergedCount)} delta="+20% vs last week" tone="green" />
+        </div>
+      </details>
     </section>
   );
 }

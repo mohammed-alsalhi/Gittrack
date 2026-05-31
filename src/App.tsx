@@ -11,6 +11,7 @@ import { ChangeRadarCenter } from "./components/ChangeRadarCenter";
 import { CommandCenter } from "./components/CommandCenter";
 import { CommandPalette } from "./components/CommandPalette";
 import { FlowForecastBoard } from "./components/FlowForecastBoard";
+import { GraphiteDashboard } from "./components/GraphiteDashboard";
 import { GraphiteNavRail, type GraphiteNavItemId } from "./components/GraphiteNavRail";
 import { Inspector } from "./components/Inspector";
 import { NotificationCenter, buildNotificationSignals } from "./components/NotificationCenter";
@@ -33,6 +34,7 @@ import { WorkspaceLens, WorkspaceLensBar } from "./components/WorkspaceLensBar";
 import { sampleTrackerData } from "./data/sampleData";
 import { loadGitHubTracker } from "./lib/github";
 import { getPrIntelligence } from "./lib/insights";
+import { loadLocalGitSummary } from "./lib/localGit";
 import {
   AttentionItemMemory,
   AttentionItemMemoryById,
@@ -62,6 +64,7 @@ import {
   LaunchCommandMemory,
   LaunchCommandMemoryById,
   LaunchCommandStatus,
+  LocalGitSummary,
   MergeImpactMemory,
   MergeImpactMemoryByRepo,
   OutboundUpdate,
@@ -95,6 +98,8 @@ import {
   StackPlanStepKind,
   StackReviewMode,
   StackReviewNavigatorMemory,
+  TestingBranchFlag,
+  TestingBranchSuite,
   TrackerConfig,
   TrackerDataset,
   WorkspaceBriefActionMemory,
@@ -158,6 +163,8 @@ const REVIEW_THREADS_KEY = "gittrack.reviewThreads";
 const AUTOPILOT_PLAYBOOK_KEY = "gittrack.autopilotPlaybook";
 const CHANGE_RADAR_KEY = "gittrack.changeRadar";
 const NOTIFICATION_SEEN_KEY = "gittrack.notificationSeen";
+const LOCAL_GIT_PATH_KEY = "gittrack.localGitPath";
+const TESTING_BRANCH_SUITES_KEY = "gittrack.testingBranchSuites";
 
 const GRAPHITE_NAV_TARGETS: Record<GraphiteNavItemId, string> = {
   inbox: "review-inbox-workbench",
@@ -178,6 +185,13 @@ const GRAPHITE_NAV_LABELS: Record<GraphiteNavItemId, string> = {
   reviews: "change radar",
   automation: "autopilot playbook",
 };
+
+const SECONDARY_GRAPHITE_NAV_ITEMS = new Set<GraphiteNavItemId>([
+  "pull_requests",
+  "branches",
+  "reviews",
+  "automation",
+]);
 
 const checklistDefaults: Record<ReviewChecklistKey, boolean> = {
   read_diff: false,
@@ -236,6 +250,13 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [lastAction, setLastAction] = useState<string | null>(null);
   const [activeNavItem, setActiveNavItem] = useState<GraphiteNavItemId>("inbox");
+  const [secondarySystemsOpen, setSecondarySystemsOpen] = useState(false);
+  const [operatingPanelsOpen, setOperatingPanelsOpen] = useState(false);
+  const [localGitPath, setLocalGitPath] = useState(loadStoredLocalGitPath);
+  const [localGitSummary, setLocalGitSummary] = useState<LocalGitSummary | undefined>();
+  const [localGitLoading, setLocalGitLoading] = useState(false);
+  const [localGitError, setLocalGitError] = useState<string | null>(null);
+  const [testingBranchSuites, setTestingBranchSuites] = useState<TestingBranchSuite[]>(loadStoredTestingBranchSuites);
 
   useEffect(() => {
     if (!data.repos.some((repo) => repo.slug === activeRepo)) {
@@ -538,6 +559,18 @@ export default function App() {
   }, [notificationSeenIds]);
 
   useEffect(() => {
+    localStorage.setItem(LOCAL_GIT_PATH_KEY, localGitPath);
+  }, [localGitPath]);
+
+  useEffect(() => {
+    localStorage.setItem(TESTING_BRANCH_SUITES_KEY, JSON.stringify(testingBranchSuites));
+  }, [testingBranchSuites]);
+
+  useEffect(() => {
+    void refreshLocalGit(localGitPath);
+  }, []);
+
+  useEffect(() => {
     if (!lastAction || lastAction.startsWith("Action journal cleared")) return;
 
     setActionJournal((current) => {
@@ -573,6 +606,97 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const refreshLocalGit = async (pathOverride = localGitPath) => {
+    setLocalGitLoading(true);
+    setLocalGitError(null);
+
+    try {
+      const summary = await loadLocalGitSummary(pathOverride);
+      setLocalGitSummary(summary);
+      setLocalGitPath(summary.root);
+      setLastAction(`Scanned local git repo ${summary.repoName}.`);
+    } catch (caught) {
+      setLocalGitError(caught instanceof Error ? caught.message : "Unable to scan local git repository.");
+    } finally {
+      setLocalGitLoading(false);
+    }
+  };
+
+  const createTestingBranchSuite = () => {
+    const suite = createTestingSuite(localGitSummary, localGitPath);
+    setTestingBranchSuites((current) => [suite, ...current]);
+    setLastAction(`Created testing suite "${suite.name}".`);
+  };
+
+  const updateTestingBranchSuite = (id: string, patch: Partial<TestingBranchSuite>) => {
+    setTestingBranchSuites((current) =>
+      current.map((suite) =>
+        suite.id === id ? { ...suite, ...patch, updatedAt: new Date().toISOString() } : suite,
+      ),
+    );
+  };
+
+  const deleteTestingBranchSuite = (id: string) => {
+    setTestingBranchSuites((current) => current.filter((suite) => suite.id !== id));
+    setLastAction("Removed testing branch suite.");
+  };
+
+  const addTestingBranchFlag = (suiteId: string) => {
+    const nextFlag: TestingBranchFlag = {
+      id: `flag-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      key: "VITE_EXPERIMENT",
+      value: "true",
+      enabled: true,
+    };
+    setTestingBranchSuites((current) =>
+      current.map((suite) =>
+        suite.id === suiteId
+          ? { ...suite, flags: [...suite.flags, nextFlag], updatedAt: new Date().toISOString() }
+          : suite,
+      ),
+    );
+  };
+
+  const updateTestingBranchFlag = (
+    suiteId: string,
+    flagId: string,
+    patch: Partial<TestingBranchFlag>,
+  ) => {
+    setTestingBranchSuites((current) =>
+      current.map((suite) =>
+        suite.id === suiteId
+          ? {
+              ...suite,
+              flags: suite.flags.map((flag) => (flag.id === flagId ? { ...flag, ...patch } : flag)),
+              updatedAt: new Date().toISOString(),
+            }
+          : suite,
+      ),
+    );
+  };
+
+  const deleteTestingBranchFlag = (suiteId: string, flagId: string) => {
+    setTestingBranchSuites((current) =>
+      current.map((suite) =>
+        suite.id === suiteId
+          ? {
+              ...suite,
+              flags: suite.flags.filter((flag) => flag.id !== flagId),
+              updatedAt: new Date().toISOString(),
+            }
+          : suite,
+      ),
+    );
+  };
+
+  const copyTestingBranchSuite = (suite: TestingBranchSuite) => {
+    const runMatrix = buildTestingSuiteRunMatrix(suite);
+    if (navigator.clipboard) {
+      void navigator.clipboard.writeText(runMatrix).catch(() => undefined);
+    }
+    setLastAction(`Copied ${suite.branches.length || 1}-branch test matrix for "${suite.name}".`);
   };
 
   const saveConfig = (nextConfig: TrackerConfig, shouldRefresh: boolean) => {
@@ -1238,17 +1362,27 @@ export default function App() {
     setLastAction(`${label} command staged.`);
   };
 
+  const revealSecondarySystem = (id: string) => {
+    setSecondarySystemsOpen(true);
+    window.requestAnimationFrame(() => scrollWorkspaceElementIntoView(id));
+  };
+
+  const revealOperatingPanel = (id: string) => {
+    setOperatingPanelsOpen(true);
+    window.requestAnimationFrame(() => scrollWorkspaceElementIntoView(id));
+  };
+
   const openChangeRadar = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("change-radar");
+    revealSecondarySystem("change-radar");
     setLastAction("Opened change radar.");
   };
 
   const openBranchDriftBoard = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("branch-drift-board");
+    revealSecondarySystem("branch-drift-board");
     setLastAction("Opened branch drift board.");
   };
 
@@ -1262,7 +1396,7 @@ export default function App() {
   const openMergeQueueTimeline = () => {
     setWorkspaceLens("ship");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("merge-queue-timeline");
+    revealOperatingPanel("merge-queue-timeline");
     setLastAction("Opened merge train timeline.");
   };
 
@@ -1364,91 +1498,91 @@ export default function App() {
   const openWorkspaceBriefing = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("workspace-briefing");
+    revealOperatingPanel("workspace-briefing");
     setLastAction("Opened workspace briefing.");
   };
 
   const openLaunchStudio = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("launch-command-studio");
+    revealOperatingPanel("launch-command-studio");
     setLastAction("Opened PR launch studio.");
   };
 
   const openConnectionCenter = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("github-connection-center");
+    revealOperatingPanel("github-connection-center");
     setLastAction("Opened GitHub connection cockpit.");
   };
 
   const openAttentionInbox = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("attention-inbox");
+    revealOperatingPanel("attention-inbox");
     setLastAction("Opened attention inbox.");
   };
 
   const openDecisionSimulator = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("decision-simulator");
+    revealOperatingPanel("decision-simulator");
     setLastAction("Opened decision simulator.");
   };
 
   const openActionJournal = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("action-journal");
+    revealOperatingPanel("action-journal");
     setLastAction("Opened decision journal.");
   };
 
   const openDailyDigest = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("daily-digest-composer");
+    revealOperatingPanel("daily-digest-composer");
     setLastAction("Opened daily digest composer.");
   };
 
   const openOutboundComms = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("outbound-comms");
+    revealOperatingPanel("outbound-comms");
     setLastAction("Opened comms outbox.");
   };
 
   const openTriageBoard = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("triage-board");
+    revealOperatingPanel("triage-board");
     setLastAction("Opened triage command board.");
   };
 
   const openBatchCommandCart = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("batch-command-cart");
+    revealOperatingPanel("batch-command-cart");
     setLastAction("Opened batch command cart.");
   };
 
   const openStackReviewNavigator = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("stack-review-navigator");
+    revealOperatingPanel("stack-review-navigator");
     setLastAction("Opened stack review navigator.");
   };
 
   const openReviewThreadResolver = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("review-thread-resolver");
+    revealOperatingPanel("review-thread-resolver");
     setLastAction("Opened review thread resolver.");
   };
 
   const openAutopilotPlaybookCenter = () => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("autopilot-playbook-center");
+    revealSecondarySystem("autopilot-playbook-center");
     setLastAction("Opened autopilot playbook center.");
   };
 
@@ -1668,6 +1802,7 @@ export default function App() {
     setWorkspaceLens("all");
     setPaletteOpen(false);
     setActiveNavItem(item);
+    const scrollToTarget = () => scrollWorkspaceElementIntoView(GRAPHITE_NAV_TARGETS[item]);
 
     if (item === "inbox" || item === "pull_requests") {
       setActiveFilter("all");
@@ -1677,9 +1812,99 @@ export default function App() {
       setActiveFilter("codex");
     }
 
-    scrollWorkspaceElementIntoView(GRAPHITE_NAV_TARGETS[item]);
+    if (SECONDARY_GRAPHITE_NAV_ITEMS.has(item)) {
+      setSecondarySystemsOpen(true);
+      window.requestAnimationFrame(scrollToTarget);
+    } else {
+      scrollToTarget();
+    }
+
     setLastAction(`Opened ${GRAPHITE_NAV_LABELS[item]}.`);
   };
+
+  return (
+    <>
+      <GraphiteDashboard
+        repos={data.repos}
+        activeRepo={activeRepo}
+        source={source}
+        query={query}
+        loading={loading}
+        pullRequests={repoPullRequests}
+        branches={repoBranches}
+        selectedPrId={selectedPr?.id}
+        reviewMemory={reviewMemory}
+        localGitPath={localGitPath}
+        localGitSummary={localGitSummary}
+        localGitLoading={localGitLoading}
+        localGitError={localGitError}
+        testingBranchSuites={testingBranchSuites}
+        onRepoChange={(repo) => {
+          setActiveRepo(repo);
+          setSelectedPrId(data.pullRequests.find((pr) => pr.repo === repo)?.id ?? "");
+        }}
+        onQueryChange={setQuery}
+        onRefresh={() => void refresh()}
+        onLocalGitPathChange={setLocalGitPath}
+        onRefreshLocalGit={() => void refreshLocalGit(localGitPath)}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenCommandPalette={() => setPaletteOpen(true)}
+        onSelectPullRequest={setSelectedPrId}
+        onPromoteCodex={promoteCodexReaction}
+        onCreateTestingSuite={createTestingBranchSuite}
+        onUpdateTestingSuite={updateTestingBranchSuite}
+        onDeleteTestingSuite={deleteTestingBranchSuite}
+        onCopyTestingSuite={copyTestingBranchSuite}
+        onAddTestingFlag={addTestingBranchFlag}
+        onUpdateTestingFlag={updateTestingBranchFlag}
+        onDeleteTestingFlag={deleteTestingBranchFlag}
+      />
+
+      <CommandPalette
+        open={paletteOpen}
+        pullRequests={repoPullRequests}
+        onClose={() => setPaletteOpen(false)}
+        onSelectPullRequest={setSelectedPrId}
+        onOpenSettings={() => {
+          setPaletteOpen(false);
+          setSettingsOpen(true);
+        }}
+        onPromoteCodex={() => selectedPr && promoteCodexReaction(selectedPr.id)}
+        onPinSelected={() => selectedPr && toggleReviewPin(selectedPr.id)}
+        onSnoozeSelected={() => selectedPr && snoozeReview(selectedPr.id)}
+        onMarkReady={() => selectedPr && setReviewDecision(selectedPr.id, "ready")}
+        onSetQuery={setQuery}
+        onSmartMerge={() => selectedPr && smartMerge(selectedPr.id)}
+        onRunAutomationPlan={runAutomationPlan}
+        onOpenWorkspaceBrief={openWorkspaceBriefing}
+        onOpenLaunchStudio={openLaunchStudio}
+        onOpenConnectionCenter={openConnectionCenter}
+        onOpenAttentionInbox={openAttentionInbox}
+        onOpenDecisionSimulator={openDecisionSimulator}
+        onOpenActionJournal={openActionJournal}
+        onOpenDailyDigest={openDailyDigest}
+        onOpenOutboundComms={openOutboundComms}
+        onOpenBatchCommandCart={openBatchCommandCart}
+        onOpenChangeRadar={openChangeRadar}
+        onOpenStackTopology={openStackTopology}
+        onOpenStackReviewNavigator={openStackReviewNavigator}
+        onOpenReviewThreadResolver={openReviewThreadResolver}
+        onOpenAutopilotPlaybook={openAutopilotPlaybookCenter}
+        onOpenTriageBoard={openTriageBoard}
+        onModeChange={(mode) => {
+          changeWorkMode(mode);
+          setPaletteOpen(false);
+        }}
+      />
+
+      <SettingsDialog
+        open={settingsOpen}
+        config={config}
+        onClose={() => setSettingsOpen(false)}
+        onSave={saveConfig}
+      />
+    </>
+  );
 
   return (
     <div className="app-shell">
@@ -1806,6 +2031,35 @@ export default function App() {
           />
         </section>
 
+        <section className="workspace-stage review-inbox-stage">
+          <ReviewInboxWorkbench
+            pullRequests={filteredPullRequests}
+            selectedId={selectedPr?.id}
+            reviewMemory={reviewMemory}
+            onSelectPullRequest={setSelectedPrId}
+            onPromoteCodex={promoteCodexReaction}
+            onMarkReady={(id) => markTriageDecision(id, "ready")}
+            onSmartMerge={smartMerge}
+            onSelectNext={() => navigateReviewQueue(1)}
+            onSelectPrevious={() => navigateReviewQueue(-1)}
+            onCopySessionBrief={copyReviewSessionBrief}
+            onOpenStackReviewNavigator={openStackReviewNavigator}
+            onOpenChangeRadar={openChangeRadar}
+          />
+        </section>
+
+        <section className="workspace-stage secondary-systems-stage">
+          <details
+            className="secondary-systems"
+            open={secondarySystemsOpen}
+            onToggle={(event) => setSecondarySystemsOpen(event.currentTarget.open)}
+          >
+            <summary>
+              <span>Secondary systems</span>
+              <strong>Forecasts, branch drift, PR matrix, automation</strong>
+              <em>{secondarySystemsOpen ? "Hide" : "Show"}</em>
+            </summary>
+            <div className="secondary-systems-body">
         <section className="workspace-stage portfolio-pulse-stage">
           <PortfolioPulseDeck
             repos={data.repos}
@@ -1867,23 +2121,6 @@ export default function App() {
           />
         </section>
 
-        <section className="workspace-stage review-inbox-stage">
-          <ReviewInboxWorkbench
-            pullRequests={filteredPullRequests}
-            selectedId={selectedPr?.id}
-            reviewMemory={reviewMemory}
-            onSelectPullRequest={setSelectedPrId}
-            onPromoteCodex={promoteCodexReaction}
-            onMarkReady={(id) => markTriageDecision(id, "ready")}
-            onSmartMerge={smartMerge}
-            onSelectNext={() => navigateReviewQueue(1)}
-            onSelectPrevious={() => navigateReviewQueue(-1)}
-            onCopySessionBrief={copyReviewSessionBrief}
-            onOpenStackReviewNavigator={openStackReviewNavigator}
-            onOpenChangeRadar={openChangeRadar}
-          />
-        </section>
-
         <section className="workspace-stage stack-rail-stage">
           <StackCommandRail
             pullRequests={data.pullRequests}
@@ -1941,8 +2178,15 @@ export default function App() {
             onMarkReady={(id) => markTriageDecision(id, "ready")}
           />
         </section>
+            </div>
+          </details>
+        </section>
 
-        <LazyFeature label="operating panels">
+        <LazyFeature
+          label="operating panels"
+          open={operatingPanelsOpen}
+          onOpenChange={setOperatingPanelsOpen}
+        >
         <section className="workspace-stage stack-review-stage">
           <StackReviewNavigator
             pullRequests={data.pullRequests}
@@ -2418,11 +2662,36 @@ export default function App() {
   );
 }
 
-function LazyFeature({ label, children }: { label: string; children: ReactNode }) {
+function LazyFeature({
+  label,
+  children,
+  open,
+  onOpenChange,
+}: {
+  label: string;
+  children: ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   return (
-    <Suspense fallback={<FeatureLoading label={label} />}>
-      {children}
-    </Suspense>
+    <section className="workspace-stage operating-panels-stage">
+      <details
+        className="operating-panels"
+        open={open}
+        onToggle={(event) => onOpenChange(event.currentTarget.open)}
+      >
+        <summary>
+          <span>Advanced panels</span>
+          <strong>Stack review, triage, digests, connection tools</strong>
+          <em>{open ? "Hide" : "Show"}</em>
+        </summary>
+        <div className="operating-panels-body">
+          <Suspense fallback={<FeatureLoading label={label} />}>
+            {children}
+          </Suspense>
+        </div>
+      </details>
+    </section>
   );
 }
 
@@ -2448,6 +2717,26 @@ function loadStoredConfig(): TrackerConfig {
     return raw ? { ...defaultConfig, ...JSON.parse(raw) } : defaultConfig;
   } catch {
     return defaultConfig;
+  }
+}
+
+function loadStoredLocalGitPath() {
+  try {
+    return localStorage.getItem(LOCAL_GIT_PATH_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function loadStoredTestingBranchSuites(): TestingBranchSuite[] {
+  try {
+    const raw = localStorage.getItem(TESTING_BRANCH_SUITES_KEY);
+    if (!raw) return [];
+
+    const saved = JSON.parse(raw) as unknown;
+    return Array.isArray(saved) ? saved.filter(isTestingBranchSuite) : [];
+  } catch {
+    return [];
   }
 }
 
@@ -2865,6 +3154,81 @@ function createChangeRadar(seed: Partial<ChangeRadarMemory> = {}): ChangeRadarMe
     lastCheckpointAt: typeof seed.lastCheckpointAt === "string" ? seed.lastCheckpointAt : undefined,
     updatedAt: typeof seed.updatedAt === "string" ? seed.updatedAt : new Date(0).toISOString(),
   };
+}
+
+function createTestingSuite(summary: LocalGitSummary | undefined, repoPath: string): TestingBranchSuite {
+  const now = new Date().toISOString();
+  const candidateBranches =
+    summary?.localBranches
+      .filter((branch) => !branch.current && branch.name !== summary.defaultBranch)
+      .slice(0, 4)
+      .map((branch) => branch.name) ?? [];
+  const fallbackBranch = summary?.currentBranch && summary.currentBranch !== "detached" ? [summary.currentBranch] : [];
+
+  return {
+    id: `suite-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    repoPath: summary?.root ?? repoPath,
+    name: "UI flag sweep",
+    branches: candidateBranches.length ? candidateBranches : fallbackBranch,
+    command: "npm run test:ui -- --branch=$BRANCH",
+    flags: [
+      { id: `flag-${Date.now()}-ui`, key: "VITE_UI_TEST_MODE", value: "true", enabled: true },
+      { id: `flag-${Date.now()}-branch`, key: "VITE_BRANCH_UNDER_TEST", value: "$BRANCH", enabled: true },
+    ],
+    notes: "Stores the branch matrix and env flags to run against each selected branch.",
+    updatedAt: now,
+  };
+}
+
+function buildTestingSuiteRunMatrix(suite: TestingBranchSuite) {
+  const branches = suite.branches.length ? suite.branches : ["$BRANCH"];
+  const envPrefix = suite.flags
+    .filter((flag) => flag.enabled && flag.key.trim())
+    .map((flag) => `${flag.key.trim()}=${quoteShellValue(flag.value)}`)
+    .join(" ");
+  const command = suite.command.trim() || "npm run test:ui -- --branch=$BRANCH";
+
+  return branches
+    .map((branch) => {
+      const resolvedCommand = command.split("$BRANCH").join(branch);
+      const resolvedEnv = envPrefix.split("$BRANCH").join(branch);
+      return [resolvedEnv, resolvedCommand].filter(Boolean).join(" ");
+    })
+    .join("\n");
+}
+
+function quoteShellValue(value: string) {
+  if (!value) return "''";
+  if (/^[A-Za-z0-9_./:@-]+$/.test(value)) return value;
+  return `'${value.split("'").join("'\"'\"'")}'`;
+}
+
+function isTestingBranchSuite(value: unknown): value is TestingBranchSuite {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const suite = value as Partial<TestingBranchSuite>;
+  return (
+    typeof suite.id === "string" &&
+    typeof suite.name === "string" &&
+    typeof suite.repoPath === "string" &&
+    typeof suite.command === "string" &&
+    typeof suite.notes === "string" &&
+    typeof suite.updatedAt === "string" &&
+    Array.isArray(suite.branches) &&
+    suite.branches.every((branch) => typeof branch === "string") &&
+    Array.isArray(suite.flags) &&
+    suite.flags.every(isTestingBranchFlag)
+  );
+}
+
+function isTestingBranchFlag(value: unknown): value is TestingBranchFlag {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const flag = value as Partial<TestingBranchFlag>;
+  return (
+    typeof flag.id === "string" &&
+    typeof flag.key === "string" &&
+    typeof flag.value === "string" &&
+    typeof flag.enabled === "boolean"
+  );
 }
 
 function loadStoredReviewMemory(): ReviewMemoryByPr {

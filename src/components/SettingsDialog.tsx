@@ -12,11 +12,14 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, config, onClose, onSave }: SettingsDialogProps) {
   const [token, setToken] = useState(config.token);
   const [repos, setRepos] = useState(config.repoSlugs.join("\n"));
+  const [cliLoading, setCliLoading] = useState(false);
+  const [cliError, setCliError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setToken(config.token);
     setRepos(config.repoSlugs.join("\n"));
+    setCliError(null);
   }, [config, open]);
 
   if (!open) return null;
@@ -33,6 +36,32 @@ export function SettingsDialog({ open, config, onClose, onSave }: SettingsDialog
       },
       true,
     );
+  };
+
+  const connectWithGitHubCli = async () => {
+    setCliLoading(true);
+    setCliError(null);
+
+    try {
+      const response = await fetch("/api/github/cli-auth");
+      const payload = await response.json().catch(() => undefined);
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "GitHub CLI auth failed.");
+      }
+
+      const nextConfig = {
+        token: String(payload.token ?? ""),
+        repoSlugs: Array.isArray(payload.repos) ? payload.repos.filter((repo: unknown): repo is string => typeof repo === "string") : [],
+      };
+      setToken(nextConfig.token);
+      setRepos(nextConfig.repoSlugs.join("\n"));
+      onSave(nextConfig, true);
+    } catch (caught) {
+      setCliError(caught instanceof Error ? caught.message : "GitHub CLI auth failed.");
+    } finally {
+      setCliLoading(false);
+    }
   };
 
   return (
@@ -72,11 +101,15 @@ export function SettingsDialog({ open, config, onClose, onSave }: SettingsDialog
           />
         </label>
 
-        <p className="dialog-note">Saved locally in this browser.</p>
+        <p className="dialog-note">Saved locally in this browser. GitHub CLI auth uses your local `gh` login and loads up to 30 recent repos.</p>
+        {cliError && <p className="dialog-error">{cliError}</p>}
 
         <div className="dialog-actions">
           <button type="button" className="control-button" onClick={() => onSave(config, false)}>
             Use sample data
+          </button>
+          <button type="button" className="control-button" onClick={connectWithGitHubCli} disabled={cliLoading}>
+            {cliLoading ? "Checking gh..." : "Use GitHub CLI"}
           </button>
           <button type="submit" className="primary-action">
             Save and refresh
