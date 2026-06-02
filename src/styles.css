@@ -28001,6 +28001,33 @@ button.graphite-branch-row:hover,
   resize: vertical;
 }
 
+.graphite-suite-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--g-muted);
+  font-size: 12px;
+}
+
+.graphite-suite-preview-head em {
+  font-style: normal;
+}
+
+.graphite-suite-preview {
+  max-height: 148px;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid var(--g-line);
+  border-radius: 4px;
+  background: #000000;
+  color: #cbd5e1;
+  padding: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre;
+}
+
 .graphite-suite-actions {
   display: flex;
   flex-wrap: wrap;

@@ -780,6 +780,7 @@ function TestingSuiteCard({
   onDeleteFlag: (suiteId: string, flagId: string) => void;
 }) {
   const selectedBranches = new Set(suite.branches);
+  const preview = buildTestingSuitePreview(suite);
 
   const toggleBranch = (branch: string) => {
     const nextBranches = selectedBranches.has(branch)
@@ -826,6 +827,12 @@ function TestingSuiteCard({
 
       <textarea value={suite.notes} onChange={(event) => onUpdateSuite(suite.id, { notes: event.target.value })} aria-label="Suite notes" />
 
+      <div className="graphite-suite-preview-head">
+        <span>Command preview</span>
+        <em>{Math.max(1, suite.branches.length)} {suite.branches.length === 1 ? "run" : "runs"}</em>
+      </div>
+      <pre className="graphite-suite-preview">{preview}</pre>
+
       <div className="graphite-suite-actions">
         <button type="button" onClick={() => onAddFlag(suite.id)}><Plus size={14} /> Flag</button>
         <button type="button" onClick={() => onCopySuite(suite)}><Copy size={14} /> Copy matrix</button>
@@ -833,6 +840,29 @@ function TestingSuiteCard({
       </div>
     </div>
   );
+}
+
+function buildTestingSuitePreview(suite: TestingBranchSuite) {
+  const branches = suite.branches.length ? suite.branches : ["$BRANCH"];
+  const envPrefix = suite.flags
+    .filter((flag) => flag.enabled && flag.key.trim())
+    .map((flag) => `${flag.key.trim()}=${quoteSuiteValue(flag.value)}`)
+    .join(" ");
+  const command = suite.command.trim() || "npm run test:ui -- --branch=$BRANCH";
+
+  return branches
+    .map((branch) => {
+      const resolvedEnv = envPrefix.split("$BRANCH").join(branch);
+      const resolvedCommand = command.split("$BRANCH").join(branch);
+      return [resolvedEnv, resolvedCommand].filter(Boolean).join(" ");
+    })
+    .join("\n");
+}
+
+function quoteSuiteValue(value: string) {
+  if (!value) return "''";
+  if (/^[A-Za-z0-9_./:@-]+$/.test(value)) return value;
+  return `'${value.split("'").join("'\"'\"'")}'`;
 }
 
 function StatusDot({ state, codex }: { state: PullRequestState; codex: CodexReaction }) {
