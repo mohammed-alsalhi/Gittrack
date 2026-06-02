@@ -164,6 +164,7 @@ const AUTOPILOT_PLAYBOOK_KEY = "gittrack.autopilotPlaybook";
 const CHANGE_RADAR_KEY = "gittrack.changeRadar";
 const NOTIFICATION_SEEN_KEY = "gittrack.notificationSeen";
 const LOCAL_GIT_PATH_KEY = "gittrack.localGitPath";
+const LOCAL_GIT_BOOKMARKS_KEY = "gittrack.localGitBookmarks";
 const TESTING_BRANCH_SUITES_KEY = "gittrack.testingBranchSuites";
 
 const GRAPHITE_NAV_TARGETS: Record<GraphiteNavItemId, string> = {
@@ -253,6 +254,7 @@ export default function App() {
   const [secondarySystemsOpen, setSecondarySystemsOpen] = useState(false);
   const [operatingPanelsOpen, setOperatingPanelsOpen] = useState(false);
   const [localGitPath, setLocalGitPath] = useState(loadStoredLocalGitPath);
+  const [localGitBookmarks, setLocalGitBookmarks] = useState<string[]>(loadStoredLocalGitBookmarks);
   const [localGitSummary, setLocalGitSummary] = useState<LocalGitSummary | undefined>();
   const [localGitLoading, setLocalGitLoading] = useState(false);
   const [localGitError, setLocalGitError] = useState<string | null>(null);
@@ -563,6 +565,10 @@ export default function App() {
   }, [localGitPath]);
 
   useEffect(() => {
+    localStorage.setItem(LOCAL_GIT_BOOKMARKS_KEY, JSON.stringify(localGitBookmarks));
+  }, [localGitBookmarks]);
+
+  useEffect(() => {
     localStorage.setItem(TESTING_BRANCH_SUITES_KEY, JSON.stringify(testingBranchSuites));
   }, [testingBranchSuites]);
 
@@ -622,6 +628,24 @@ export default function App() {
     } finally {
       setLocalGitLoading(false);
     }
+  };
+
+  const saveLocalGitBookmark = () => {
+    const bookmark = (localGitSummary?.root ?? localGitPath).trim();
+    if (!bookmark) return;
+
+    setLocalGitBookmarks((current) => [bookmark, ...current.filter((item) => item !== bookmark)].slice(0, 8));
+    setLastAction(`Saved local Git bookmark ${bookmark}.`);
+  };
+
+  const selectLocalGitBookmark = (bookmark: string) => {
+    setLocalGitPath(bookmark);
+    void refreshLocalGit(bookmark);
+  };
+
+  const removeLocalGitBookmark = (bookmark: string) => {
+    setLocalGitBookmarks((current) => current.filter((item) => item !== bookmark));
+    setLastAction(`Removed local Git bookmark ${bookmark}.`);
   };
 
   const createTestingBranchSuite = () => {
@@ -1835,6 +1859,7 @@ export default function App() {
         selectedPrId={selectedPr?.id}
         reviewMemory={reviewMemory}
         localGitPath={localGitPath}
+        localGitBookmarks={localGitBookmarks}
         localGitSummary={localGitSummary}
         localGitLoading={localGitLoading}
         localGitError={localGitError}
@@ -1847,6 +1872,9 @@ export default function App() {
         onRefresh={() => void refresh()}
         onLocalGitPathChange={setLocalGitPath}
         onRefreshLocalGit={() => void refreshLocalGit(localGitPath)}
+        onSaveLocalGitBookmark={saveLocalGitBookmark}
+        onSelectLocalGitBookmark={selectLocalGitBookmark}
+        onRemoveLocalGitBookmark={removeLocalGitBookmark}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenCommandPalette={() => setPaletteOpen(true)}
         onSelectPullRequest={setSelectedPrId}
@@ -2725,6 +2753,18 @@ function loadStoredLocalGitPath() {
     return localStorage.getItem(LOCAL_GIT_PATH_KEY) ?? "";
   } catch {
     return "";
+  }
+}
+
+function loadStoredLocalGitBookmarks(): string[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_GIT_BOOKMARKS_KEY);
+    if (!raw) return [];
+
+    const saved = JSON.parse(raw) as unknown;
+    return Array.isArray(saved) ? saved.filter((path) => typeof path === "string").slice(0, 8) : [];
+  } catch {
+    return [];
   }
 }
 

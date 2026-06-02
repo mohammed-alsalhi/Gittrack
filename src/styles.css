@@ -27668,6 +27668,58 @@ button.graphite-branch-row:hover,
   font-size: 13px;
 }
 
+.graphite-local-bookmarks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid var(--g-line);
+  padding: 12px 24px;
+}
+
+.graphite-local-bookmarks > button,
+.graphite-local-bookmark button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 30px;
+  border: 1px solid var(--g-line);
+  border-radius: 4px;
+  background: #000000;
+  color: #dbe4ef;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.graphite-local-bookmarks > button:hover,
+.graphite-local-bookmark button:hover {
+  border-color: #3a3a3a;
+}
+
+.graphite-local-bookmarks em {
+  color: var(--g-muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.graphite-local-bookmark {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--g-line);
+  border-radius: 4px;
+}
+
+.graphite-local-bookmark button {
+  border: 0;
+  border-radius: 0;
+}
+
+.graphite-local-bookmark button + button {
+  border-left: 1px solid var(--g-line);
+  padding: 0 8px;
+}
+
 .graphite-local-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);

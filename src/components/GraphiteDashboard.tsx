@@ -47,6 +47,7 @@ interface GraphiteDashboardProps {
   selectedPrId?: string;
   reviewMemory: ReviewMemoryByPr;
   localGitPath: string;
+  localGitBookmarks: string[];
   localGitSummary?: LocalGitSummary;
   localGitLoading: boolean;
   localGitError: string | null;
@@ -56,6 +57,9 @@ interface GraphiteDashboardProps {
   onRefresh: () => void;
   onLocalGitPathChange: (value: string) => void;
   onRefreshLocalGit: () => void;
+  onSaveLocalGitBookmark: () => void;
+  onSelectLocalGitBookmark: (bookmark: string) => void;
+  onRemoveLocalGitBookmark: (bookmark: string) => void;
   onOpenSettings: () => void;
   onOpenCommandPalette: () => void;
   onSelectPullRequest: (id: string) => void;
@@ -90,6 +94,7 @@ export function GraphiteDashboard({
   selectedPrId,
   reviewMemory,
   localGitPath,
+  localGitBookmarks,
   localGitSummary,
   localGitLoading,
   localGitError,
@@ -99,6 +104,9 @@ export function GraphiteDashboard({
   onRefresh,
   onLocalGitPathChange,
   onRefreshLocalGit,
+  onSaveLocalGitBookmark,
+  onSelectLocalGitBookmark,
+  onRemoveLocalGitBookmark,
   onOpenSettings,
   onOpenCommandPalette,
   onSelectPullRequest,
@@ -424,6 +432,7 @@ export function GraphiteDashboard({
 
           <LocalGitPanel
             path={localGitPath}
+            bookmarks={localGitBookmarks}
             summary={localGitSummary}
             loading={localGitLoading}
             error={localGitError}
@@ -434,6 +443,9 @@ export function GraphiteDashboard({
             dirtyWorktreeCount={dirtyWorktreeCount}
             onPathChange={onLocalGitPathChange}
             onRefresh={onRefreshLocalGit}
+            onSaveBookmark={onSaveLocalGitBookmark}
+            onSelectBookmark={onSelectLocalGitBookmark}
+            onRemoveBookmark={onRemoveLocalGitBookmark}
             onCreateSuite={onCreateTestingSuite}
             onUpdateSuite={onUpdateTestingSuite}
             onDeleteSuite={onDeleteTestingSuite}
@@ -476,6 +488,7 @@ function GraphiteDivider() {
 
 function LocalGitPanel({
   path,
+  bookmarks,
   summary,
   loading,
   error,
@@ -486,6 +499,9 @@ function LocalGitPanel({
   dirtyWorktreeCount,
   onPathChange,
   onRefresh,
+  onSaveBookmark,
+  onSelectBookmark,
+  onRemoveBookmark,
   onCreateSuite,
   onUpdateSuite,
   onDeleteSuite,
@@ -495,6 +511,7 @@ function LocalGitPanel({
   onDeleteFlag,
 }: {
   path: string;
+  bookmarks: string[];
   summary?: LocalGitSummary;
   loading: boolean;
   error: string | null;
@@ -505,6 +522,9 @@ function LocalGitPanel({
   dirtyWorktreeCount: number;
   onPathChange: (value: string) => void;
   onRefresh: () => void;
+  onSaveBookmark: () => void;
+  onSelectBookmark: (bookmark: string) => void;
+  onRemoveBookmark: (bookmark: string) => void;
   onCreateSuite: () => void;
   onUpdateSuite: (id: string, patch: Partial<TestingBranchSuite>) => void;
   onDeleteSuite: (id: string) => void;
@@ -541,6 +561,24 @@ function LocalGitPanel({
       </div>
 
       {error && <div className="graphite-local-error">{error}</div>}
+
+      <div className="graphite-local-bookmarks">
+        <button type="button" onClick={onSaveBookmark} disabled={!path.trim() && !summary}>
+          <Plus size={14} /> Save repo
+        </button>
+        {bookmarks.length ? bookmarks.map((bookmark) => (
+          <span className="graphite-local-bookmark" key={bookmark}>
+            <button type="button" onClick={() => onSelectBookmark(bookmark)} title={bookmark}>
+              {repoPathLabel(bookmark)}
+            </button>
+            <button type="button" onClick={() => onRemoveBookmark(bookmark)} aria-label={`Remove ${bookmark}`}>
+              <Trash2 size={12} />
+            </button>
+          </span>
+        )) : (
+          <em>No saved local repos yet.</em>
+        )}
+      </div>
 
       {summary ? (
         <div className="graphite-local-grid">
@@ -655,6 +693,10 @@ function MetricTile({ label, value, detail, tone }: { label: string; value: numb
       <small>{detail}</small>
     </div>
   );
+}
+
+function repoPathLabel(path: string) {
+  return path.split(/[\\/]/).filter(Boolean).pop() ?? path;
 }
 
 function LocalBranchRow({ branch, compact = false }: { branch: LocalGitSummary["localBranches"][number]; compact?: boolean }) {
