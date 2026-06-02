@@ -465,3 +465,12 @@ export interface TestingBranchSuite {
   notes: string;
   updatedAt: string;
 }
+
+export type BranchCleanupStatus = "review" | "keep" | "delete";
+
+export interface BranchCleanupDecision {
+  status: BranchCleanupStatus;
+  updatedAt: string;
+}
+
+export type BranchCleanupDecisionByRef = Record<string, BranchCleanupDecision>;

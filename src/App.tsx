@@ -44,6 +44,8 @@ import {
   ActionJournalTone,
   AutopilotPlaybookId,
   AutopilotPlaybookMemory,
+  BranchCleanupDecisionByRef,
+  BranchCleanupStatus,
   BatchExecutionMemory,
   BatchExecutionMode,
   ChangeRadarMemory,
@@ -165,6 +167,7 @@ const CHANGE_RADAR_KEY = "gittrack.changeRadar";
 const NOTIFICATION_SEEN_KEY = "gittrack.notificationSeen";
 const LOCAL_GIT_PATH_KEY = "gittrack.localGitPath";
 const LOCAL_GIT_BOOKMARKS_KEY = "gittrack.localGitBookmarks";
+const BRANCH_CLEANUP_KEY = "gittrack.branchCleanupDecisions";
 const TESTING_BRANCH_SUITES_KEY = "gittrack.testingBranchSuites";
 
 const GRAPHITE_NAV_TARGETS: Record<GraphiteNavItemId, string> = {
@@ -255,6 +258,7 @@ export default function App() {
   const [operatingPanelsOpen, setOperatingPanelsOpen] = useState(false);
   const [localGitPath, setLocalGitPath] = useState(loadStoredLocalGitPath);
   const [localGitBookmarks, setLocalGitBookmarks] = useState<string[]>(loadStoredLocalGitBookmarks);
+  const [branchCleanupDecisions, setBranchCleanupDecisions] = useState<BranchCleanupDecisionByRef>(loadStoredBranchCleanupDecisions);
   const [localGitSummary, setLocalGitSummary] = useState<LocalGitSummary | undefined>();
   const [localGitLoading, setLocalGitLoading] = useState(false);
   const [localGitError, setLocalGitError] = useState<string | null>(null);
@@ -569,6 +573,10 @@ export default function App() {
   }, [localGitBookmarks]);
 
   useEffect(() => {
+    localStorage.setItem(BRANCH_CLEANUP_KEY, JSON.stringify(branchCleanupDecisions));
+  }, [branchCleanupDecisions]);
+
+  useEffect(() => {
     localStorage.setItem(TESTING_BRANCH_SUITES_KEY, JSON.stringify(testingBranchSuites));
   }, [testingBranchSuites]);
 
@@ -646,6 +654,17 @@ export default function App() {
   const removeLocalGitBookmark = (bookmark: string) => {
     setLocalGitBookmarks((current) => current.filter((item) => item !== bookmark));
     setLastAction(`Removed local Git bookmark ${bookmark}.`);
+  };
+
+  const updateBranchCleanupDecision = (refKey: string, status: BranchCleanupStatus) => {
+    setBranchCleanupDecisions((current) => ({
+      ...current,
+      [refKey]: {
+        status,
+        updatedAt: new Date().toISOString(),
+      },
+    }));
+    setLastAction(`Marked stale ref for ${status === "delete" ? "cleanup" : status}.`);
   };
 
   const createTestingBranchSuite = () => {
@@ -1860,6 +1879,7 @@ export default function App() {
         reviewMemory={reviewMemory}
         localGitPath={localGitPath}
         localGitBookmarks={localGitBookmarks}
+        branchCleanupDecisions={branchCleanupDecisions}
         localGitSummary={localGitSummary}
         localGitLoading={localGitLoading}
         localGitError={localGitError}
@@ -1875,6 +1895,7 @@ export default function App() {
         onSaveLocalGitBookmark={saveLocalGitBookmark}
         onSelectLocalGitBookmark={selectLocalGitBookmark}
         onRemoveLocalGitBookmark={removeLocalGitBookmark}
+        onUpdateBranchCleanupDecision={updateBranchCleanupDecision}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenCommandPalette={() => setPaletteOpen(true)}
         onSelectPullRequest={setSelectedPrId}
@@ -2768,6 +2789,23 @@ function loadStoredLocalGitBookmarks(): string[] {
   }
 }
 
+function loadStoredBranchCleanupDecisions(): BranchCleanupDecisionByRef {
+  try {
+    const raw = localStorage.getItem(BRANCH_CLEANUP_KEY);
+    if (!raw) return {};
+
+    const saved = JSON.parse(raw) as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.entries(saved)
+        .filter((entry): entry is [string, { status: BranchCleanupStatus; updatedAt: string }] =>
+          isBranchCleanupDecision(entry[1]),
+        ),
+    );
+  } catch {
+    return {};
+  }
+}
+
 function loadStoredTestingBranchSuites(): TestingBranchSuite[] {
   try {
     const raw = localStorage.getItem(TESTING_BRANCH_SUITES_KEY);
@@ -3269,6 +3307,16 @@ function isTestingBranchFlag(value: unknown): value is TestingBranchFlag {
     typeof flag.value === "string" &&
     typeof flag.enabled === "boolean"
   );
+}
+
+function isBranchCleanupDecision(value: unknown): value is { status: BranchCleanupStatus; updatedAt: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const decision = value as { status?: unknown; updatedAt?: unknown };
+  return isBranchCleanupStatus(decision.status) && typeof decision.updatedAt === "string";
+}
+
+function isBranchCleanupStatus(value: unknown): value is BranchCleanupStatus {
+  return value === "review" || value === "keep" || value === "delete";
 }
 
 function loadStoredReviewMemory(): ReviewMemoryByPr {

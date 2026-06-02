@@ -25,6 +25,8 @@ import {
 import { useMemo, useState, type KeyboardEvent } from "react";
 import type {
   BranchSummary,
+  BranchCleanupDecisionByRef,
+  BranchCleanupStatus,
   CodexReaction,
   LocalGitSummary,
   PullRequestState,
@@ -48,6 +50,7 @@ interface GraphiteDashboardProps {
   reviewMemory: ReviewMemoryByPr;
   localGitPath: string;
   localGitBookmarks: string[];
+  branchCleanupDecisions: BranchCleanupDecisionByRef;
   localGitSummary?: LocalGitSummary;
   localGitLoading: boolean;
   localGitError: string | null;
@@ -60,6 +63,7 @@ interface GraphiteDashboardProps {
   onSaveLocalGitBookmark: () => void;
   onSelectLocalGitBookmark: (bookmark: string) => void;
   onRemoveLocalGitBookmark: (bookmark: string) => void;
+  onUpdateBranchCleanupDecision: (refKey: string, status: BranchCleanupStatus) => void;
   onOpenSettings: () => void;
   onOpenCommandPalette: () => void;
   onSelectPullRequest: (id: string) => void;
@@ -95,6 +99,7 @@ export function GraphiteDashboard({
   reviewMemory,
   localGitPath,
   localGitBookmarks,
+  branchCleanupDecisions,
   localGitSummary,
   localGitLoading,
   localGitError,
@@ -107,6 +112,7 @@ export function GraphiteDashboard({
   onSaveLocalGitBookmark,
   onSelectLocalGitBookmark,
   onRemoveLocalGitBookmark,
+  onUpdateBranchCleanupDecision,
   onOpenSettings,
   onOpenCommandPalette,
   onSelectPullRequest,
@@ -433,6 +439,7 @@ export function GraphiteDashboard({
           <LocalGitPanel
             path={localGitPath}
             bookmarks={localGitBookmarks}
+            branchCleanupDecisions={branchCleanupDecisions}
             summary={localGitSummary}
             loading={localGitLoading}
             error={localGitError}
@@ -446,6 +453,7 @@ export function GraphiteDashboard({
             onSaveBookmark={onSaveLocalGitBookmark}
             onSelectBookmark={onSelectLocalGitBookmark}
             onRemoveBookmark={onRemoveLocalGitBookmark}
+            onUpdateBranchCleanupDecision={onUpdateBranchCleanupDecision}
             onCreateSuite={onCreateTestingSuite}
             onUpdateSuite={onUpdateTestingSuite}
             onDeleteSuite={onDeleteTestingSuite}
@@ -489,6 +497,7 @@ function GraphiteDivider() {
 function LocalGitPanel({
   path,
   bookmarks,
+  branchCleanupDecisions,
   summary,
   loading,
   error,
@@ -502,6 +511,7 @@ function LocalGitPanel({
   onSaveBookmark,
   onSelectBookmark,
   onRemoveBookmark,
+  onUpdateBranchCleanupDecision,
   onCreateSuite,
   onUpdateSuite,
   onDeleteSuite,
@@ -512,6 +522,7 @@ function LocalGitPanel({
 }: {
   path: string;
   bookmarks: string[];
+  branchCleanupDecisions: BranchCleanupDecisionByRef;
   summary?: LocalGitSummary;
   loading: boolean;
   error: string | null;
@@ -525,6 +536,7 @@ function LocalGitPanel({
   onSaveBookmark: () => void;
   onSelectBookmark: (bookmark: string) => void;
   onRemoveBookmark: (bookmark: string) => void;
+  onUpdateBranchCleanupDecision: (refKey: string, status: BranchCleanupStatus) => void;
   onCreateSuite: () => void;
   onUpdateSuite: (id: string, patch: Partial<TestingBranchSuite>) => void;
   onDeleteSuite: (id: string) => void;
@@ -640,7 +652,12 @@ function LocalGitPanel({
             </div>
             <div className="graphite-stale-list">
               {staleBranches.length ? staleBranches.map((branch) => (
-                <LocalBranchRow branch={branch} compact key={`${branch.kind}-${branch.name}`} />
+                <StaleBranchRow
+                  branch={branch}
+                  decision={branchCleanupDecisions[cleanupRefKey(summary.root, branch)]?.status ?? "review"}
+                  onDecisionChange={(status) => onUpdateBranchCleanupDecision(cleanupRefKey(summary.root, branch), status)}
+                  key={`${branch.kind}-${branch.name}`}
+                />
               )) : (
                 <div className="graphite-empty-state">
                   <strong>No stale refs.</strong>
@@ -711,6 +728,36 @@ function LocalBranchRow({ branch, compact = false }: { branch: LocalGitSummary["
       <em className={tone}>{branch.gone ? "gone" : branch.stale ? `${branch.ageDays}d stale` : branch.ahead ? `+${branch.ahead}` : branch.behind ? `-${branch.behind}` : "fresh"}</em>
     </div>
   );
+}
+
+function StaleBranchRow({
+  branch,
+  decision,
+  onDecisionChange,
+}: {
+  branch: LocalGitSummary["localBranches"][number];
+  decision: BranchCleanupStatus;
+  onDecisionChange: (status: BranchCleanupStatus) => void;
+}) {
+  return (
+    <div className="graphite-stale-row">
+      <CircleDot size={13} />
+      <span>
+        <strong>{branch.name}</strong>
+        <small>{branch.kind} - {branch.gone ? "upstream gone" : `${branch.ageDays} days old`}</small>
+      </span>
+      <em className={decision}>{decision}</em>
+      <div>
+        <button type="button" className={decision === "review" ? "active" : ""} onClick={() => onDecisionChange("review")}>Review</button>
+        <button type="button" className={decision === "keep" ? "active" : ""} onClick={() => onDecisionChange("keep")}>Keep</button>
+        <button type="button" className={decision === "delete" ? "active" : ""} onClick={() => onDecisionChange("delete")}>Delete</button>
+      </div>
+    </div>
+  );
+}
+
+function cleanupRefKey(root: string, branch: LocalGitSummary["localBranches"][number]) {
+  return `${root}:${branch.kind}:${branch.name}`;
 }
 
 function TestingSuiteCard({
