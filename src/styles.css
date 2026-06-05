@@ -2043,7 +2043,7 @@ a {
   }
 }
 
-/* Graphite-inspired product skin */
+/* Product skin */
 :root {
   --bg: #101012;
   --surface: #1c1b20;
@@ -4106,7 +4106,7 @@ body {
   }
 }
 
-/* Graphite-style product pass */
+/* Product pass */
 :root {
   color-scheme: dark;
   --bg: #111113;
@@ -10002,7 +10002,7 @@ body {
   }
 }
 
-/* Graphite fidelity pass */
+/* Fidelity pass */
 :root {
   --bg: #29272f;
   --surface: #2d2b32;
@@ -19345,7 +19345,7 @@ body,
   }
 }
 
-/* Graphite-style product shell */
+/* Product shell */
 :root {
   --bg: #151518;
   --surface: #202025;
@@ -19396,7 +19396,7 @@ body {
   background: #17171b;
 }
 
-.graphite-nav-rail {
+.gittrack-nav-rail {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19407,9 +19407,9 @@ body {
   padding: 8px 4px;
 }
 
-.graphite-nav-logo,
-.graphite-nav-avatar,
-.graphite-nav-stack button {
+.gittrack-nav-logo,
+.gittrack-nav-avatar,
+.gittrack-nav-stack button {
   display: inline-grid;
   place-items: center;
   width: 28px;
@@ -19417,7 +19417,7 @@ body {
   border-radius: 6px;
 }
 
-.graphite-nav-logo {
+.gittrack-nav-logo {
   background: #f0eff4;
   color: #111113;
   font-size: 11px;
@@ -19425,26 +19425,26 @@ body {
   text-transform: lowercase;
 }
 
-.graphite-nav-stack {
+.gittrack-nav-stack {
   display: grid;
   gap: 4px;
 }
 
-.graphite-nav-stack button {
+.gittrack-nav-stack button {
   position: relative;
   border: 1px solid transparent;
   background: transparent;
   color: #85828c;
 }
 
-.graphite-nav-stack button:hover,
-.graphite-nav-stack button.active {
+.gittrack-nav-stack button:hover,
+.gittrack-nav-stack button.active {
   border-color: #36363d;
   background: #26262c;
   color: #f7f6fa;
 }
 
-.graphite-nav-stack button.active::before {
+.gittrack-nav-stack button.active::before {
   position: absolute;
   left: -5px;
   width: 2px;
@@ -19454,7 +19454,7 @@ body {
   content: "";
 }
 
-.graphite-nav-badge {
+.gittrack-nav-badge {
   position: absolute;
   top: -4px;
   right: -4px;
@@ -19471,19 +19471,19 @@ body {
   line-height: 1;
 }
 
-.graphite-nav-stack button.active .graphite-nav-badge {
+.gittrack-nav-stack button.active .gittrack-nav-badge {
   background: #f0eff4;
 }
 
-.graphite-nav-badge.badge-urgent {
+.gittrack-nav-badge.badge-urgent {
   background: #ff8fa3;
 }
 
-.graphite-nav-bottom {
+.gittrack-nav-bottom {
   margin-top: auto;
 }
 
-.graphite-nav-avatar {
+.gittrack-nav-avatar {
   margin-top: 2px;
   border: 1px solid #36363d;
   background: #28282e;
@@ -21451,7 +21451,7 @@ body {
 }
 
 @media (max-width: 900px) {
-  .graphite-nav-rail {
+  .gittrack-nav-rail {
     display: none;
   }
 
@@ -25694,7 +25694,7 @@ body,
   grid-template-columns: 38px 220px minmax(680px, 1fr) 360px;
 }
 
-.graphite-nav-rail,
+.gittrack-nav-rail,
 .sidebar,
 .inspector,
 .topbar,
@@ -25704,7 +25704,7 @@ body,
   box-shadow: none;
 }
 
-.graphite-nav-rail,
+.gittrack-nav-rail,
 .sidebar,
 .inspector {
   border-color: var(--flat-line);
@@ -26368,12 +26368,12 @@ body,
   }
 }
 
-/* Screenshot-matched Graphite dashboard */
+/* Screenshot-matched dashboard */
 body {
   min-width: 0;
 }
 
-.graphite-dashboard {
+.gittrack-dashboard {
   --g-bg: #0f1419;
   --g-panel: #11171d;
   --g-panel-soft: #151b21;
@@ -26400,12 +26400,12 @@ body {
     sans-serif;
 }
 
-.graphite-dashboard button,
-.graphite-dashboard input {
+.gittrack-dashboard button,
+.gittrack-dashboard input {
   font: inherit;
 }
 
-.graphite-sidebar {
+.gittrack-sidebar {
   display: grid;
   grid-template-rows: 64px auto minmax(0, 1fr) auto;
   min-width: 0;
@@ -26415,7 +26415,7 @@ body {
     rgba(13, 18, 23, 0.94);
 }
 
-.graphite-brand {
+.gittrack-brand {
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--g-line);
@@ -26425,7 +26425,7 @@ body {
   font-weight: 800;
 }
 
-.graphite-repo-select {
+.gittrack-repo-select {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 10px;
@@ -26440,21 +26440,21 @@ body {
   text-align: left;
 }
 
-.graphite-repo-select span {
+.gittrack-repo-select span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.graphite-nav {
+.gittrack-nav {
   display: grid;
   align-content: start;
   gap: 2px;
   padding: 0 10px;
 }
 
-.graphite-nav button {
+.gittrack-nav button {
   position: relative;
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr) auto;
@@ -26469,12 +26469,12 @@ body {
   text-align: left;
 }
 
-.graphite-nav button.active {
+.gittrack-nav button.active {
   background: rgba(148, 163, 184, 0.095);
   color: #ffffff;
 }
 
-.graphite-nav button.active::before {
+.gittrack-nav button.active::before {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -26484,11 +26484,11 @@ body {
   content: "";
 }
 
-.graphite-nav button:hover {
+.gittrack-nav button:hover {
   background: rgba(148, 163, 184, 0.07);
 }
 
-.graphite-nav button span {
+.gittrack-nav button span {
   min-width: 0;
   overflow: hidden;
   font-size: 14px;
@@ -26496,7 +26496,7 @@ body {
   white-space: nowrap;
 }
 
-.graphite-nav button em {
+.gittrack-nav button em {
   display: inline-grid;
   place-items: center;
   min-width: 20px;
@@ -26509,7 +26509,7 @@ body {
   font-weight: 700;
 }
 
-.graphite-nav hr {
+.gittrack-nav hr {
   width: 100%;
   height: 1px;
   margin: 16px 0 8px;
@@ -26517,7 +26517,7 @@ body {
   background: var(--g-line);
 }
 
-.graphite-sidebar-status {
+.gittrack-sidebar-status {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -26529,8 +26529,8 @@ body {
   font-size: 13px;
 }
 
-.graphite-ready-dot,
-.graphite-status-dot {
+.gittrack-ready-dot,
+.gittrack-status-dot {
   display: inline-block;
   width: 9px;
   height: 9px;
@@ -26538,7 +26538,7 @@ body {
   background: var(--g-green);
 }
 
-.graphite-sidebar-status button {
+.gittrack-sidebar-status button {
   display: inline-grid;
   place-items: center;
   width: 30px;
@@ -26548,14 +26548,14 @@ body {
   color: #b8c2cf;
 }
 
-.graphite-main-shell {
+.gittrack-main-shell {
   display: grid;
   grid-template-rows: var(--g-topbar) minmax(0, 1fr);
   min-width: 0;
   min-height: 100vh;
 }
 
-.graphite-topbar {
+.gittrack-topbar {
   display: grid;
   grid-template-columns: auto minmax(280px, 360px) minmax(0, 1fr) auto;
   align-items: center;
@@ -26565,19 +26565,19 @@ body {
   padding: 0 26px;
 }
 
-.graphite-topbar-nav,
-.graphite-topbar-actions {
+.gittrack-topbar-nav,
+.gittrack-topbar-actions {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.graphite-topbar button,
-.graphite-review-tools button,
-.graphite-review-head > button,
-.graphite-branches-head button,
-.graphite-view-all,
-.graphite-segments button {
+.gittrack-topbar button,
+.gittrack-review-tools button,
+.gittrack-review-head > button,
+.gittrack-branches-head button,
+.gittrack-view-all,
+.gittrack-segments button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -26591,23 +26591,23 @@ body {
   font-size: 13px;
 }
 
-.graphite-topbar button {
+.gittrack-topbar button {
   width: 30px;
   padding: 0;
 }
 
-.graphite-topbar button:hover,
-.graphite-review-tools button:hover,
-.graphite-review-head > button:hover,
-.graphite-branches-head button:hover,
-.graphite-view-all:hover,
-.graphite-segments button:hover,
-.graphite-segments button.active {
+.gittrack-topbar button:hover,
+.gittrack-review-tools button:hover,
+.gittrack-review-head > button:hover,
+.gittrack-branches-head button:hover,
+.gittrack-view-all:hover,
+.gittrack-segments button:hover,
+.gittrack-segments button.active {
   border-color: rgba(226, 232, 240, 0.28);
   background: rgba(255, 255, 255, 0.06);
 }
 
-.graphite-global-search {
+.gittrack-global-search {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 10px;
@@ -26620,8 +26620,8 @@ body {
   color: var(--g-muted);
 }
 
-.graphite-global-search input,
-.graphite-branches-head input {
+.gittrack-global-search input,
+.gittrack-branches-head input {
   min-width: 0;
   border: 0;
   outline: 0;
@@ -26629,13 +26629,13 @@ body {
   color: var(--g-text);
 }
 
-.graphite-global-search input::placeholder,
-.graphite-branches-head input::placeholder {
+.gittrack-global-search input::placeholder,
+.gittrack-branches-head input::placeholder {
   color: #8b96a5;
 }
 
-.graphite-global-search kbd,
-.graphite-view-all kbd {
+.gittrack-global-search kbd,
+.gittrack-view-all kbd {
   border: 1px solid var(--g-line);
   border-radius: 4px;
   color: #8f9aa7;
@@ -26644,15 +26644,15 @@ body {
   font-family: inherit;
 }
 
-.graphite-topbar-actions {
+.gittrack-topbar-actions {
   grid-column: 4;
 }
 
-.graphite-topbar-actions button {
+.gittrack-topbar-actions button {
   position: relative;
 }
 
-.graphite-topbar-actions button i {
+.gittrack-topbar-actions button i {
   position: absolute;
   top: 5px;
   right: 5px;
@@ -26662,8 +26662,8 @@ body {
   background: var(--g-green);
 }
 
-.graphite-avatar,
-.graphite-mini-avatar {
+.gittrack-avatar,
+.gittrack-mini-avatar {
   display: inline-grid;
   place-items: center;
   width: 31px;
@@ -26676,13 +26676,13 @@ body {
   font-weight: 700;
 }
 
-.graphite-mini-avatar {
+.gittrack-mini-avatar {
   width: 27px;
   height: 27px;
   font-size: 11px;
 }
 
-.graphite-workspace {
+.gittrack-workspace {
   display: grid;
   grid-template-columns: minmax(620px, 1fr) minmax(440px, 512px);
   grid-template-rows: minmax(626px, 0.7fr) minmax(220px, 0.3fr);
@@ -26691,38 +26691,38 @@ body {
   overflow: hidden;
 }
 
-.graphite-stack-panel,
-.graphite-review-panel,
-.graphite-branches-panel {
+.gittrack-stack-panel,
+.gittrack-review-panel,
+.gittrack-branches-panel {
   min-width: 0;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 34%),
     rgba(13, 18, 23, 0.42);
 }
 
-.graphite-stack-panel {
+.gittrack-stack-panel {
   display: grid;
   grid-template-rows: 78px 40px minmax(0, 1fr) 76px;
   border-right: 1px solid var(--g-line);
   border-bottom: 1px solid var(--g-line);
 }
 
-.graphite-review-panel {
+.gittrack-review-panel {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) 44px;
   border-bottom: 1px solid var(--g-line);
 }
 
-.graphite-branches-panel {
+.gittrack-branches-panel {
   grid-column: 1 / -1;
   display: grid;
   grid-template-rows: 58px minmax(0, 1fr);
   min-height: 0;
 }
 
-.graphite-section-head,
-.graphite-review-head,
-.graphite-branches-head {
+.gittrack-section-head,
+.gittrack-review-head,
+.gittrack-branches-head {
   display: grid;
   align-items: center;
   gap: 16px;
@@ -26730,13 +26730,13 @@ body {
   padding: 0 24px;
 }
 
-.graphite-section-head {
+.gittrack-section-head {
   grid-template-columns: minmax(0, 1fr) auto auto;
 }
 
-.graphite-section-head h1,
-.graphite-review-head h2,
-.graphite-branches-head h2 {
+.gittrack-section-head h1,
+.gittrack-review-head h2,
+.gittrack-branches-head h2 {
   margin: 0;
   color: #ffffff;
   font-size: 24px;
@@ -26744,30 +26744,30 @@ body {
   letter-spacing: 0;
 }
 
-.graphite-review-head h2,
-.graphite-branches-head h2 {
+.gittrack-review-head h2,
+.gittrack-branches-head h2 {
   font-size: 20px;
 }
 
-.graphite-segments {
+.gittrack-segments {
   display: inline-flex;
   overflow: hidden;
   border: 1px solid var(--g-line);
   border-radius: 5px;
 }
 
-.graphite-segments button {
+.gittrack-segments button {
   min-height: 34px;
   border-width: 0 1px 0 0;
   border-radius: 0;
   background: transparent;
 }
 
-.graphite-segments button:last-child {
+.gittrack-segments button:last-child {
   border-right: 0;
 }
 
-.graphite-checkbox {
+.gittrack-checkbox {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -26776,13 +26776,13 @@ body {
   white-space: nowrap;
 }
 
-.graphite-checkbox input {
+.gittrack-checkbox input {
   width: 14px;
   height: 14px;
   accent-color: var(--g-green);
 }
 
-.graphite-stack-axis {
+.gittrack-stack-axis {
   display: grid;
   grid-template-columns: minmax(90px, 0.18fr) minmax(0, 1fr);
   align-items: end;
@@ -26791,12 +26791,12 @@ body {
   padding: 0 30px 8px;
 }
 
-.graphite-stack-axis span:last-child {
+.gittrack-stack-axis span:last-child {
   justify-self: end;
   padding-right: 92px;
 }
 
-.graphite-stack-map {
+.gittrack-stack-map {
   position: relative;
   display: grid;
   grid-template-columns: 92px 30px minmax(0, 1fr);
@@ -26804,7 +26804,7 @@ body {
   padding: 8px 30px;
 }
 
-.graphite-base-node {
+.gittrack-base-node {
   align-self: start;
   display: inline-grid;
   place-items: center;
@@ -26815,13 +26815,13 @@ body {
   font-size: 14px;
 }
 
-.graphite-rail {
+.gittrack-rail {
   position: relative;
   height: calc(100% - 20px);
   min-height: 260px;
 }
 
-.graphite-rail::before {
+.gittrack-rail::before {
   position: absolute;
   top: 18px;
   bottom: 0;
@@ -26831,7 +26831,7 @@ body {
   content: "";
 }
 
-.graphite-stack-list {
+.gittrack-stack-list {
   display: grid;
   align-content: start;
   gap: 12px;
@@ -26839,13 +26839,13 @@ body {
   padding-top: 1px;
 }
 
-.graphite-lane {
+.gittrack-lane {
   position: relative;
   display: grid;
   gap: 8px;
 }
 
-.graphite-lane::before {
+.gittrack-lane::before {
   position: absolute;
   top: 17px;
   left: -30px;
@@ -26855,7 +26855,7 @@ body {
   content: "";
 }
 
-.graphite-lane::after {
+.gittrack-lane::after {
   position: absolute;
   top: 12px;
   left: -35px;
@@ -26866,7 +26866,7 @@ body {
   content: "";
 }
 
-.graphite-stack-row {
+.gittrack-stack-row {
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) auto auto auto auto;
   align-items: center;
@@ -26880,76 +26880,76 @@ body {
   text-align: left;
 }
 
-.graphite-stack-row:hover,
-.graphite-stack-row.selected {
+.gittrack-stack-row:hover,
+.gittrack-stack-row.selected {
   border-color: rgba(226, 232, 240, 0.32);
   background: rgba(255, 255, 255, 0.045);
 }
 
-.graphite-stack-copy,
-.graphite-review-copy {
+.gittrack-stack-copy,
+.gittrack-review-copy {
   display: grid;
   gap: 4px;
   min-width: 0;
 }
 
-.graphite-stack-copy strong,
-.graphite-review-copy strong,
-.graphite-stack-copy small,
-.graphite-review-copy small,
-.graphite-review-copy em {
+.gittrack-stack-copy strong,
+.gittrack-review-copy strong,
+.gittrack-stack-copy small,
+.gittrack-review-copy small,
+.gittrack-review-copy em {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.graphite-stack-copy strong,
-.graphite-review-copy strong {
+.gittrack-stack-copy strong,
+.gittrack-review-copy strong {
   color: #f8fafc;
   font-size: 14px;
   font-weight: 690;
 }
 
-.graphite-stack-copy small,
-.graphite-review-copy small,
-.graphite-review-copy em {
+.gittrack-stack-copy small,
+.gittrack-review-copy small,
+.gittrack-review-copy em {
   color: var(--g-muted);
   font-size: 12px;
   font-style: normal;
 }
 
-.graphite-status-dot.waiting,
-.graphite-status-dot.codex {
+.gittrack-status-dot.waiting,
+.gittrack-status-dot.codex {
   background: var(--g-amber);
 }
 
-.graphite-status-dot.blocked {
+.gittrack-status-dot.blocked {
   background: var(--g-red);
 }
 
-.graphite-status-text,
-.graphite-review-state {
+.gittrack-status-text,
+.gittrack-review-state {
   color: var(--g-green);
   font-size: 13px;
   font-weight: 650;
   white-space: nowrap;
 }
 
-.graphite-review-state.waiting,
-.graphite-review-state.codex {
+.gittrack-review-state.waiting,
+.gittrack-review-state.codex {
   color: var(--g-amber);
 }
 
-.graphite-review-state.blocked {
+.gittrack-review-state.blocked {
   color: var(--g-red);
 }
 
-.graphite-lane-gap {
+.gittrack-lane-gap {
   height: 8px;
 }
 
-.graphite-stack-legend {
+.gittrack-stack-legend {
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr);
   gap: 28px;
@@ -26960,52 +26960,52 @@ body {
   font-size: 13px;
 }
 
-.graphite-stack-legend span {
+.gittrack-stack-legend span {
   display: inline-flex;
   align-items: center;
   gap: 10px;
 }
 
-.graphite-stack-legend i,
-.graphite-stack-legend b {
+.gittrack-stack-legend i,
+.gittrack-stack-legend b {
   display: inline-block;
   width: 32px;
   height: 1px;
   background: #dbe4ef;
 }
 
-.graphite-stack-legend b {
+.gittrack-stack-legend b {
   border-top: 1px dotted #dbe4ef;
   background: transparent;
 }
 
-.graphite-stack-legend em {
+.gittrack-stack-legend em {
   justify-self: end;
   color: #cbd5e1;
   font-style: normal;
 }
 
-.graphite-review-head {
+.gittrack-review-head {
   grid-template-columns: minmax(0, 1fr) auto auto;
   min-height: 78px;
   border-bottom: 0;
 }
 
-.graphite-review-head > button {
+.gittrack-review-head > button {
   justify-self: start;
 }
 
-.graphite-review-tools {
+.gittrack-review-tools {
   display: flex;
   gap: 10px;
 }
 
-.graphite-review-tools button {
+.gittrack-review-tools button {
   width: 36px;
   padding: 0;
 }
 
-.graphite-review-tabs {
+.gittrack-review-tabs {
   display: flex;
   gap: 26px;
   align-items: end;
@@ -27014,7 +27014,7 @@ body {
   padding: 0 24px;
 }
 
-.graphite-review-tabs button {
+.gittrack-review-tabs button {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -27028,11 +27028,11 @@ body {
   white-space: nowrap;
 }
 
-.graphite-review-tabs button.active {
+.gittrack-review-tabs button.active {
   color: #ffffff;
 }
 
-.graphite-review-tabs button.active::after {
+.gittrack-review-tabs button.active::after {
   position: absolute;
   right: 0;
   bottom: 0;
@@ -27042,7 +27042,7 @@ body {
   content: "";
 }
 
-.graphite-review-tabs span {
+.gittrack-review-tabs span {
   display: inline-grid;
   place-items: center;
   min-width: 20px;
@@ -27053,12 +27053,12 @@ body {
   font-size: 12px;
 }
 
-.graphite-review-list {
+.gittrack-review-list {
   min-height: 0;
   overflow: auto;
 }
 
-.graphite-review-row {
+.gittrack-review-row {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr) auto 34px auto;
   align-items: center;
@@ -27074,12 +27074,12 @@ body {
   text-align: left;
 }
 
-.graphite-review-row:focus-visible {
+.gittrack-review-row:focus-visible {
   outline: 1px solid #3a3a3a;
   outline-offset: -1px;
 }
 
-.graphite-codex-action {
+.gittrack-codex-action {
   display: inline-grid;
   place-items: center;
   width: 28px;
@@ -27091,29 +27091,29 @@ body {
   cursor: pointer;
 }
 
-.graphite-codex-action.watching {
+.gittrack-codex-action.watching {
   color: var(--g-amber);
 }
 
-.graphite-codex-action.ready {
+.gittrack-codex-action.ready {
   color: var(--g-green);
 }
 
-.graphite-codex-action:disabled {
+.gittrack-codex-action:disabled {
   cursor: default;
   opacity: 0.8;
 }
 
-.graphite-codex-action:not(:disabled):hover {
+.gittrack-codex-action:not(:disabled):hover {
   border-color: #3a3a3a;
 }
 
-.graphite-review-row:hover,
-.graphite-review-row.selected {
+.gittrack-review-row:hover,
+.gittrack-review-row.selected {
   background: rgba(255, 255, 255, 0.035);
 }
 
-.graphite-review-icon {
+.gittrack-review-icon {
   display: inline-grid;
   place-items: center;
   width: 26px;
@@ -27123,12 +27123,12 @@ body {
   color: #65dd82;
 }
 
-.graphite-review-icon.codex {
+.gittrack-review-icon.codex {
   background: rgba(148, 163, 184, 0.12);
   color: #d2d9e3;
 }
 
-.graphite-view-all {
+.gittrack-view-all {
   justify-content: space-between;
   width: 100%;
   min-height: 44px;
@@ -27138,11 +27138,11 @@ body {
   padding: 0 24px;
 }
 
-.graphite-branches-head {
+.gittrack-branches-head {
   grid-template-columns: auto minmax(220px, 0.36fr) minmax(0, 1fr);
 }
 
-.graphite-branches-head label {
+.gittrack-branches-head label {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 8px;
@@ -27154,18 +27154,18 @@ body {
   padding: 0 10px;
 }
 
-.graphite-branches-head > div {
+.gittrack-branches-head > div {
   display: flex;
   justify-content: flex-end;
   gap: 14px;
 }
 
-.graphite-branch-table {
+.gittrack-branch-table {
   min-height: 0;
   overflow: auto;
 }
 
-.graphite-branch-row {
+.gittrack-branch-row {
   display: grid;
   grid-template-columns: minmax(220px, 1.4fr) 104px 94px 94px 114px 110px minmax(220px, 1.2fr) 38px;
   align-items: center;
@@ -27179,103 +27179,103 @@ body {
   text-align: left;
 }
 
-button.graphite-branch-row:hover {
+button.gittrack-branch-row:hover {
   background: rgba(255, 255, 255, 0.035);
 }
 
-.graphite-branch-header {
+.gittrack-branch-header {
   min-height: 36px;
   color: #a6b0be;
   font-size: 12px;
 }
 
-.graphite-branch-row span {
+.gittrack-branch-row span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.graphite-branch-name {
+.gittrack-branch-name {
   display: inline-flex;
   gap: 10px;
   align-items: center;
 }
 
-.graphite-branch-row code {
+.gittrack-branch-row code {
   color: #9aa5b1;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
 }
 
 @media (max-width: 1180px) {
-  .graphite-dashboard {
+  .gittrack-dashboard {
     grid-template-columns: 72px minmax(0, 1fr);
   }
 
-  .graphite-brand {
+  .gittrack-brand {
     justify-content: center;
     padding: 0;
     font-size: 14px;
   }
 
-  .graphite-repo-select {
+  .gittrack-repo-select {
     display: none;
   }
 
-  .graphite-nav {
+  .gittrack-nav {
     padding: 14px 8px;
   }
 
-  .graphite-nav button {
+  .gittrack-nav button {
     grid-template-columns: 1fr;
     justify-items: center;
     padding: 0;
   }
 
-  .graphite-nav button span,
-  .graphite-nav button em,
-  .graphite-sidebar-status span {
+  .gittrack-nav button span,
+  .gittrack-nav button em,
+  .gittrack-sidebar-status span {
     display: none;
   }
 
-  .graphite-sidebar-status {
+  .gittrack-sidebar-status {
     grid-template-columns: 1fr;
     justify-items: center;
     padding: 0;
   }
 
-  .graphite-workspace {
+  .gittrack-workspace {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto;
     height: auto;
     overflow: auto;
   }
 
-  .graphite-stack-panel,
-  .graphite-review-panel,
-  .graphite-branches-panel {
+  .gittrack-stack-panel,
+  .gittrack-review-panel,
+  .gittrack-branches-panel {
     border-right: 0;
   }
 }
 
 @media (max-width: 760px) {
-  .graphite-dashboard {
+  .gittrack-dashboard {
     display: block;
     overflow: auto;
     overflow-x: hidden;
     width: 100%;
   }
 
-  .graphite-sidebar {
+  .gittrack-sidebar {
     display: none;
   }
 
-  .graphite-main-shell {
+  .gittrack-main-shell {
     min-height: auto;
   }
 
-  .graphite-topbar {
+  .gittrack-topbar {
     position: sticky;
     top: 0;
     z-index: 20;
@@ -27284,119 +27284,119 @@ button.graphite-branch-row:hover {
     padding: 8px;
   }
 
-  .graphite-global-search {
+  .gittrack-global-search {
     min-width: 0;
     padding: 0 10px;
   }
 
-  .graphite-global-search button {
+  .gittrack-global-search button {
     display: none;
   }
 
-  .graphite-topbar-nav,
-  .graphite-topbar-actions .graphite-avatar,
-  .graphite-topbar-actions button:nth-child(2),
-  .graphite-topbar-actions button:nth-child(3) {
+  .gittrack-topbar-nav,
+  .gittrack-topbar-actions .gittrack-avatar,
+  .gittrack-topbar-actions button:nth-child(2),
+  .gittrack-topbar-actions button:nth-child(3) {
     display: none;
   }
 
-  .graphite-topbar-actions {
+  .gittrack-topbar-actions {
     display: none;
   }
 
-  .graphite-workspace {
+  .gittrack-workspace {
     display: block;
     height: auto;
     overflow: visible;
   }
 
-  .graphite-section-head,
-  .graphite-review-head,
-  .graphite-branches-head {
+  .gittrack-section-head,
+  .gittrack-review-head,
+  .gittrack-branches-head {
     grid-template-columns: 1fr;
     align-items: start;
     gap: 12px;
     padding: 16px;
   }
 
-  .graphite-checkbox,
-  .graphite-stack-axis,
-  .graphite-stack-legend,
-  .graphite-review-tools,
-  .graphite-branches-head label,
-  .graphite-branches-head > div {
+  .gittrack-checkbox,
+  .gittrack-stack-axis,
+  .gittrack-stack-legend,
+  .gittrack-review-tools,
+  .gittrack-branches-head label,
+  .gittrack-branches-head > div {
     display: none;
   }
 
-  .graphite-stack-panel {
+  .gittrack-stack-panel {
     display: block;
   }
 
-  .graphite-stack-map {
+  .gittrack-stack-map {
     grid-template-columns: 22px minmax(0, 1fr);
     padding: 12px 10px 18px;
   }
 
-  .graphite-base-node,
-  .graphite-rail {
+  .gittrack-base-node,
+  .gittrack-rail {
     display: none;
   }
 
-  .graphite-stack-list {
+  .gittrack-stack-list {
     grid-column: 1 / -1;
   }
 
-  .graphite-stack-row {
+  .gittrack-stack-row {
     grid-template-columns: 20px minmax(0, 1fr) auto;
     margin-left: 0 !important;
   }
 
-  .graphite-stack-row .graphite-status-text,
-  .graphite-stack-row .graphite-mini-avatar,
-  .graphite-stack-row > svg:last-child {
+  .gittrack-stack-row .gittrack-status-text,
+  .gittrack-stack-row .gittrack-mini-avatar,
+  .gittrack-stack-row > svg:last-child {
     display: none;
   }
 
-  .graphite-review-row {
+  .gittrack-review-row {
     grid-template-columns: 30px minmax(0, 1fr);
     padding: 12px 16px;
   }
 
-  .graphite-review-row .graphite-review-state,
-  .graphite-review-row .graphite-mini-avatar {
+  .gittrack-review-row .gittrack-review-state,
+  .gittrack-review-row .gittrack-mini-avatar {
     grid-column: 2;
   }
 
-  .graphite-review-row .graphite-codex-action {
+  .gittrack-review-row .gittrack-codex-action {
     grid-column: 1;
     grid-row: 2;
   }
 
-  .graphite-review-tabs {
+  .gittrack-review-tabs {
     gap: 22px;
     overflow-x: auto;
     padding: 0 16px;
     scrollbar-width: none;
   }
 
-  .graphite-review-tabs::-webkit-scrollbar {
+  .gittrack-review-tabs::-webkit-scrollbar {
     display: none;
   }
 
-  .graphite-branch-row {
+  .gittrack-branch-row {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     padding: 0 16px;
   }
 
-  .graphite-branch-row span:nth-child(n + 3),
-  .graphite-branch-header span:nth-child(n + 3) {
+  .gittrack-branch-row span:nth-child(n + 3),
+  .gittrack-branch-header span:nth-child(n + 3) {
     display: none;
   }
 }
 
-/* Pitch-black Graphite iteration */
-.graphite-dashboard {
+/* Pitch-black iteration */
+.gittrack-dashboard {
   --g-bg: #000000;
   --g-panel: #000000;
   --g-panel-soft: #000000;
@@ -27408,72 +27408,72 @@ button.graphite-branch-row:hover {
   background: #000000;
 }
 
-.graphite-dashboard,
-.graphite-dashboard *,
-.graphite-sidebar,
-.graphite-main-shell,
-.graphite-topbar,
-.graphite-workspace,
-.graphite-stack-panel,
-.graphite-review-panel,
-.graphite-branches-panel,
-.graphite-repo-select,
-.graphite-global-search,
-.graphite-global-search button,
-.graphite-topbar button,
-.graphite-nav button,
-.graphite-review-tools button,
-.graphite-review-head > button,
-.graphite-branches-head button,
-.graphite-view-all,
-.graphite-segments,
-.graphite-segments button,
-.graphite-stack-row,
-.graphite-review-row,
-.graphite-branch-row,
-.graphite-branches-head label,
-.graphite-avatar,
-.graphite-mini-avatar,
-.graphite-review-tabs span,
-.graphite-review-icon {
+.gittrack-dashboard,
+.gittrack-dashboard *,
+.gittrack-sidebar,
+.gittrack-main-shell,
+.gittrack-topbar,
+.gittrack-workspace,
+.gittrack-stack-panel,
+.gittrack-review-panel,
+.gittrack-branches-panel,
+.gittrack-repo-select,
+.gittrack-global-search,
+.gittrack-global-search button,
+.gittrack-topbar button,
+.gittrack-nav button,
+.gittrack-review-tools button,
+.gittrack-review-head > button,
+.gittrack-branches-head button,
+.gittrack-view-all,
+.gittrack-segments,
+.gittrack-segments button,
+.gittrack-stack-row,
+.gittrack-review-row,
+.gittrack-branch-row,
+.gittrack-branches-head label,
+.gittrack-avatar,
+.gittrack-mini-avatar,
+.gittrack-review-tabs span,
+.gittrack-review-icon {
   background-color: #000000;
   background-image: none;
   box-shadow: none;
 }
 
-.graphite-sidebar,
-.graphite-topbar,
-.graphite-stack-panel,
-.graphite-review-panel,
-.graphite-branches-panel,
-.graphite-brand,
-.graphite-section-head,
-.graphite-review-tabs,
-.graphite-branches-head,
-.graphite-stack-legend,
-.graphite-review-row,
-.graphite-branch-row,
-.graphite-view-all {
+.gittrack-sidebar,
+.gittrack-topbar,
+.gittrack-stack-panel,
+.gittrack-review-panel,
+.gittrack-branches-panel,
+.gittrack-brand,
+.gittrack-section-head,
+.gittrack-review-tabs,
+.gittrack-branches-head,
+.gittrack-stack-legend,
+.gittrack-review-row,
+.gittrack-branch-row,
+.gittrack-view-all {
   border-color: var(--g-line);
 }
 
-.graphite-repo-select,
-.graphite-global-search,
-.graphite-global-search button,
-.graphite-topbar button,
-.graphite-review-tools button,
-.graphite-review-head > button,
-.graphite-branches-head button,
-.graphite-segments,
-.graphite-segments button,
-.graphite-stack-row,
-.graphite-avatar,
-.graphite-mini-avatar,
-.graphite-branches-head label {
+.gittrack-repo-select,
+.gittrack-global-search,
+.gittrack-global-search button,
+.gittrack-topbar button,
+.gittrack-review-tools button,
+.gittrack-review-head > button,
+.gittrack-branches-head button,
+.gittrack-segments,
+.gittrack-segments button,
+.gittrack-stack-row,
+.gittrack-avatar,
+.gittrack-mini-avatar,
+.gittrack-branches-head label {
   border-color: var(--g-line);
 }
 
-.graphite-repo-select select {
+.gittrack-repo-select select {
   min-width: 0;
   border: 0;
   outline: 0;
@@ -27483,12 +27483,12 @@ button.graphite-branch-row:hover {
   font: inherit;
 }
 
-.graphite-repo-select select option {
+.gittrack-repo-select select option {
   background: #000000;
   color: #f7f7f7;
 }
 
-.graphite-global-search button {
+.gittrack-global-search button {
   width: auto;
   min-height: 22px;
   border-radius: 4px;
@@ -27497,64 +27497,64 @@ button.graphite-branch-row:hover {
   font-size: 11px;
 }
 
-.graphite-nav button.active,
-.graphite-nav button:hover,
-.graphite-stack-row:hover,
-.graphite-stack-row.selected,
-.graphite-review-row:hover,
-.graphite-review-row.selected,
-button.graphite-branch-row:hover,
-.graphite-topbar button:hover,
-.graphite-review-tools button:hover,
-.graphite-review-head > button:hover,
-.graphite-branches-head button:hover,
-.graphite-view-all:hover,
-.graphite-segments button:hover,
-.graphite-segments button.active {
+.gittrack-nav button.active,
+.gittrack-nav button:hover,
+.gittrack-stack-row:hover,
+.gittrack-stack-row.selected,
+.gittrack-review-row:hover,
+.gittrack-review-row.selected,
+button.gittrack-branch-row:hover,
+.gittrack-topbar button:hover,
+.gittrack-review-tools button:hover,
+.gittrack-review-head > button:hover,
+.gittrack-branches-head button:hover,
+.gittrack-view-all:hover,
+.gittrack-segments button:hover,
+.gittrack-segments button.active {
   background-color: #000000;
   border-color: #3a3a3a;
 }
 
-.graphite-nav button.active,
-.graphite-review-tabs button.active,
-.graphite-segments button.active,
-.graphite-stack-row.selected,
-.graphite-review-row.selected {
+.gittrack-nav button.active,
+.gittrack-review-tabs button.active,
+.gittrack-segments button.active,
+.gittrack-stack-row.selected,
+.gittrack-review-row.selected {
   color: #ffffff;
 }
 
-.graphite-stack-row.selected,
-.graphite-review-row.selected {
+.gittrack-stack-row.selected,
+.gittrack-review-row.selected {
   outline: 1px solid #3a3a3a;
   outline-offset: -1px;
 }
 
-.graphite-review-icon,
-.graphite-review-icon.codex {
+.gittrack-review-icon,
+.gittrack-review-icon.codex {
   color: #d7d7d7;
 }
 
-.graphite-ready-dot,
-.graphite-status-dot.ready {
+.gittrack-ready-dot,
+.gittrack-status-dot.ready {
   background-color: var(--g-green);
 }
 
-.graphite-status-dot.waiting,
-.graphite-status-dot.codex {
+.gittrack-status-dot.waiting,
+.gittrack-status-dot.codex {
   background-color: var(--g-amber);
 }
 
-.graphite-status-dot.blocked {
+.gittrack-status-dot.blocked {
   background-color: var(--g-red);
 }
 
-.graphite-topbar-actions button i,
-.graphite-nav button.active::before,
-.graphite-review-tabs button.active::after {
+.gittrack-topbar-actions button i,
+.gittrack-nav button.active::before,
+.gittrack-review-tabs button.active::after {
   background-color: var(--g-green);
 }
 
-.graphite-empty-state {
+.gittrack-empty-state {
   display: grid;
   place-items: center;
   gap: 6px;
@@ -27565,29 +27565,29 @@ button.graphite-branch-row:hover,
   text-align: center;
 }
 
-.graphite-empty-state strong {
+.gittrack-empty-state strong {
   color: #f7f7f7;
   font-size: 14px;
 }
 
-.graphite-empty-state span {
+.gittrack-empty-state span {
   font-size: 12px;
 }
 
 /* Local Git integration */
-.graphite-workspace {
+.gittrack-workspace {
   grid-template-rows: minmax(626px, auto) minmax(260px, auto) minmax(520px, auto);
   overflow: auto;
 }
 
-.graphite-local-panel {
+.gittrack-local-panel {
   grid-column: 1 / -1;
   min-width: 0;
   border-top: 1px solid var(--g-line);
   background: #000000;
 }
 
-.graphite-local-head {
+.gittrack-local-head {
   display: grid;
   grid-template-columns: minmax(180px, 0.7fr) minmax(260px, 1fr) auto;
   gap: 14px;
@@ -27597,19 +27597,19 @@ button.graphite-branch-row:hover,
   padding: 0 24px;
 }
 
-.graphite-local-head h2 {
+.gittrack-local-head h2 {
   margin: 0;
   color: #ffffff;
   font-size: 20px;
 }
 
-.graphite-local-head span,
-.graphite-local-card-head span {
+.gittrack-local-head span,
+.gittrack-local-card-head span {
   color: var(--g-muted);
   font-size: 12px;
 }
 
-.graphite-local-path {
+.gittrack-local-path {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 9px;
@@ -27621,10 +27621,10 @@ button.graphite-branch-row:hover,
   color: var(--g-muted);
 }
 
-.graphite-local-path input,
-.graphite-suite-fields input,
-.graphite-suite-flag input,
-.graphite-suite-card textarea {
+.gittrack-local-path input,
+.gittrack-suite-fields input,
+.gittrack-suite-flag input,
+.gittrack-suite-card textarea {
   min-width: 0;
   width: 100%;
   border: 0;
@@ -27634,11 +27634,11 @@ button.graphite-branch-row:hover,
   font: inherit;
 }
 
-.graphite-local-head > button,
-.graphite-local-card-head button,
-.graphite-suite-actions button,
-.graphite-suite-branches button,
-.graphite-suite-flag button {
+.gittrack-local-head > button,
+.gittrack-local-card-head button,
+.gittrack-suite-actions button,
+.gittrack-suite-branches button,
+.gittrack-suite-flag button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -27652,23 +27652,23 @@ button.graphite-branch-row:hover,
   font-size: 13px;
 }
 
-.graphite-local-head > button:hover,
-.graphite-local-card-head button:hover,
-.graphite-suite-actions button:hover,
-.graphite-suite-branches button:hover,
-.graphite-suite-branches button.active,
-.graphite-suite-flag button:hover {
+.gittrack-local-head > button:hover,
+.gittrack-local-card-head button:hover,
+.gittrack-suite-actions button:hover,
+.gittrack-suite-branches button:hover,
+.gittrack-suite-branches button.active,
+.gittrack-suite-flag button:hover {
   border-color: #3a3a3a;
 }
 
-.graphite-local-error {
+.gittrack-local-error {
   border-bottom: 1px solid var(--g-line);
   color: var(--g-red);
   padding: 12px 24px;
   font-size: 13px;
 }
 
-.graphite-local-bookmarks {
+.gittrack-local-bookmarks {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -27677,8 +27677,8 @@ button.graphite-branch-row:hover,
   padding: 12px 24px;
 }
 
-.graphite-local-bookmarks > button,
-.graphite-local-bookmark button {
+.gittrack-local-bookmarks > button,
+.gittrack-local-bookmark button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -27692,52 +27692,52 @@ button.graphite-branch-row:hover,
   font-size: 12px;
 }
 
-.graphite-local-bookmarks > button:hover,
-.graphite-local-bookmark button:hover {
+.gittrack-local-bookmarks > button:hover,
+.gittrack-local-bookmark button:hover {
   border-color: #3a3a3a;
 }
 
-.graphite-local-bookmarks em {
+.gittrack-local-bookmarks em {
   color: var(--g-muted);
   font-size: 12px;
   font-style: normal;
 }
 
-.graphite-local-bookmark {
+.gittrack-local-bookmark {
   display: inline-flex;
   overflow: hidden;
   border: 1px solid var(--g-line);
   border-radius: 4px;
 }
 
-.graphite-local-bookmark button {
+.gittrack-local-bookmark button {
   border: 0;
   border-radius: 0;
 }
 
-.graphite-local-bookmark button + button {
+.gittrack-local-bookmark button + button {
   border-left: 1px solid var(--g-line);
   padding: 0 8px;
 }
 
-.graphite-local-grid {
+.gittrack-local-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
   gap: 0;
 }
 
-.graphite-local-overview,
-.graphite-suite-panel {
+.gittrack-local-overview,
+.gittrack-suite-panel {
   grid-column: 1 / -1;
 }
 
-.graphite-local-overview {
+.gittrack-local-overview {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   border-bottom: 1px solid var(--g-line);
 }
 
-.graphite-local-metric {
+.gittrack-local-metric {
   display: grid;
   gap: 4px;
   min-height: 86px;
@@ -27745,47 +27745,47 @@ button.graphite-branch-row:hover,
   padding: 16px 24px;
 }
 
-.graphite-local-metric:last-child {
+.gittrack-local-metric:last-child {
   border-right: 0;
 }
 
-.graphite-local-metric span,
-.graphite-local-metric small {
+.gittrack-local-metric span,
+.gittrack-local-metric small {
   color: var(--g-muted);
   font-size: 12px;
 }
 
-.graphite-local-metric strong {
+.gittrack-local-metric strong {
   color: #ffffff;
   font-size: 28px;
   line-height: 1;
 }
 
-.graphite-local-metric.green strong,
-.graphite-local-branch-row em.ready,
-.graphite-worktree-row em.ready {
+.gittrack-local-metric.green strong,
+.gittrack-local-branch-row em.ready,
+.gittrack-worktree-row em.ready {
   color: var(--g-green);
 }
 
-.graphite-local-metric.amber strong,
-.graphite-local-branch-row em.stale,
-.graphite-local-branch-row em.behind,
-.graphite-local-branch-row em.ahead,
-.graphite-worktree-row em.waiting {
+.gittrack-local-metric.amber strong,
+.gittrack-local-branch-row em.stale,
+.gittrack-local-branch-row em.behind,
+.gittrack-local-branch-row em.ahead,
+.gittrack-worktree-row em.waiting {
   color: var(--g-amber);
 }
 
-.graphite-local-card {
+.gittrack-local-card {
   min-width: 0;
   border-right: 1px solid var(--g-line);
   border-bottom: 1px solid var(--g-line);
 }
 
-.graphite-local-card:nth-child(2n + 1) {
+.gittrack-local-card:nth-child(2n + 1) {
   border-right: 0;
 }
 
-.graphite-local-card-head {
+.gittrack-local-card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -27794,12 +27794,12 @@ button.graphite-branch-row:hover,
   padding: 0 24px;
 }
 
-.graphite-local-card-head strong {
+.gittrack-local-card-head strong {
   color: #ffffff;
   font-size: 14px;
 }
 
-.graphite-git-graph {
+.gittrack-git-graph {
   min-height: 270px;
   max-height: 420px;
   margin: 0;
@@ -27812,14 +27812,14 @@ button.graphite-branch-row:hover,
   white-space: pre;
 }
 
-.graphite-local-branch-list,
-.graphite-worktree-list,
-.graphite-stale-list {
+.gittrack-local-branch-list,
+.gittrack-worktree-list,
+.gittrack-stale-list {
   display: grid;
 }
 
-.graphite-local-branch-row,
-.graphite-worktree-row {
+.gittrack-local-branch-row,
+.gittrack-worktree-row {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr) auto;
   gap: 10px;
@@ -27829,23 +27829,23 @@ button.graphite-branch-row:hover,
   padding: 0 24px;
 }
 
-.graphite-local-branch-row.compact {
+.gittrack-local-branch-row.compact {
   min-height: 42px;
 }
 
-.graphite-local-branch-row:last-child,
-.graphite-worktree-row:last-child {
+.gittrack-local-branch-row:last-child,
+.gittrack-worktree-row:last-child {
   border-bottom: 0;
 }
 
-.graphite-local-branch-row span,
-.graphite-worktree-row span {
+.gittrack-local-branch-row span,
+.gittrack-worktree-row span {
   display: grid;
   min-width: 0;
 }
 
-.graphite-local-branch-row strong,
-.graphite-worktree-row strong {
+.gittrack-local-branch-row strong,
+.gittrack-worktree-row strong {
   overflow: hidden;
   color: #ffffff;
   font-size: 13px;
@@ -27853,8 +27853,8 @@ button.graphite-branch-row:hover,
   white-space: nowrap;
 }
 
-.graphite-local-branch-row small,
-.graphite-worktree-row small {
+.gittrack-local-branch-row small,
+.gittrack-worktree-row small {
   overflow: hidden;
   color: var(--g-muted);
   font-size: 12px;
@@ -27862,14 +27862,14 @@ button.graphite-branch-row:hover,
   white-space: nowrap;
 }
 
-.graphite-local-branch-row em,
-.graphite-worktree-row em {
+.gittrack-local-branch-row em,
+.gittrack-worktree-row em {
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
 }
 
-.graphite-stale-row {
+.gittrack-stale-row {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr) auto auto;
   gap: 10px;
@@ -27879,55 +27879,55 @@ button.graphite-branch-row:hover,
   padding: 0 24px;
 }
 
-.graphite-stale-row:last-child {
+.gittrack-stale-row:last-child {
   border-bottom: 0;
 }
 
-.graphite-stale-row span {
+.gittrack-stale-row span {
   display: grid;
   min-width: 0;
 }
 
-.graphite-stale-row strong,
-.graphite-stale-row small {
+.gittrack-stale-row strong,
+.gittrack-stale-row small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.graphite-stale-row strong {
+.gittrack-stale-row strong {
   color: #ffffff;
   font-size: 13px;
 }
 
-.graphite-stale-row small {
+.gittrack-stale-row small {
   color: var(--g-muted);
   font-size: 12px;
 }
 
-.graphite-stale-row em {
+.gittrack-stale-row em {
   color: var(--g-amber);
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
 }
 
-.graphite-stale-row em.keep {
+.gittrack-stale-row em.keep {
   color: var(--g-green);
 }
 
-.graphite-stale-row em.delete {
+.gittrack-stale-row em.delete {
   color: var(--g-red);
 }
 
-.graphite-stale-row div {
+.gittrack-stale-row div {
   display: inline-flex;
   overflow: hidden;
   border: 1px solid var(--g-line);
   border-radius: 4px;
 }
 
-.graphite-stale-row button {
+.gittrack-stale-row button {
   min-height: 28px;
   border: 0;
   border-left: 1px solid var(--g-line);
@@ -27937,71 +27937,71 @@ button.graphite-branch-row:hover,
   font-size: 12px;
 }
 
-.graphite-stale-row button:first-child {
+.gittrack-stale-row button:first-child {
   border-left: 0;
 }
 
-.graphite-stale-row button.active {
+.gittrack-stale-row button.active {
   color: #ffffff;
 }
 
-.graphite-suite-panel {
+.gittrack-suite-panel {
   border-right: 0;
 }
 
-.graphite-suite-card {
+.gittrack-suite-card {
   display: grid;
   gap: 14px;
   border-bottom: 1px solid var(--g-line);
   padding: 18px 24px;
 }
 
-.graphite-suite-fields {
+.gittrack-suite-fields {
   display: grid;
   grid-template-columns: minmax(180px, 0.42fr) minmax(0, 1fr);
   gap: 12px;
 }
 
-.graphite-suite-fields input,
-.graphite-suite-flag input,
-.graphite-suite-card textarea {
+.gittrack-suite-fields input,
+.gittrack-suite-flag input,
+.gittrack-suite-card textarea {
   border: 1px solid var(--g-line);
   border-radius: 4px;
   padding: 8px 10px;
 }
 
-.graphite-suite-branches {
+.gittrack-suite-branches {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.graphite-suite-branches button.active {
+.gittrack-suite-branches button.active {
   color: #ffffff;
 }
 
-.graphite-suite-flags {
+.gittrack-suite-flags {
   display: grid;
   gap: 8px;
 }
 
-.graphite-suite-flag {
+.gittrack-suite-flag {
   display: grid;
   grid-template-columns: 22px minmax(140px, 0.42fr) minmax(120px, 1fr) 34px;
   gap: 8px;
   align-items: center;
 }
 
-.graphite-suite-flag input[type="checkbox"] {
+.gittrack-suite-flag input[type="checkbox"] {
   width: 16px;
 }
 
-.graphite-suite-card textarea {
+.gittrack-suite-card textarea {
   min-height: 64px;
   resize: vertical;
 }
 
-.graphite-suite-preview-head {
+.gittrack-suite-preview-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -28009,11 +28009,11 @@ button.graphite-branch-row:hover,
   font-size: 12px;
 }
 
-.graphite-suite-preview-head em {
+.gittrack-suite-preview-head em {
   font-style: normal;
 }
 
-.graphite-suite-preview {
+.gittrack-suite-preview {
   max-height: 148px;
   margin: 0;
   overflow: auto;
@@ -28028,81 +28028,81 @@ button.graphite-branch-row:hover,
   white-space: pre;
 }
 
-.graphite-suite-actions {
+.gittrack-suite-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.graphite-local-empty {
+.gittrack-local-empty {
   margin: 24px;
 }
 
 @media (max-width: 1180px) {
-  .graphite-local-grid {
+  .gittrack-local-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .graphite-local-card,
-  .graphite-local-card:nth-child(2n + 1) {
+  .gittrack-local-card,
+  .gittrack-local-card:nth-child(2n + 1) {
     border-right: 0;
   }
 }
 
 @media (max-width: 760px) {
-  .graphite-local-head,
-  .graphite-local-overview,
-  .graphite-suite-fields,
-  .graphite-suite-flag {
+  .gittrack-local-head,
+  .gittrack-local-overview,
+  .gittrack-suite-fields,
+  .gittrack-suite-flag {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .graphite-local-head {
+  .gittrack-local-head {
     padding: 16px;
   }
 
-  .graphite-local-card-head,
-  .graphite-local-branch-row,
-  .graphite-worktree-row,
-  .graphite-stale-row,
-  .graphite-suite-card,
-  .graphite-git-graph {
+  .gittrack-local-card-head,
+  .gittrack-local-branch-row,
+  .gittrack-worktree-row,
+  .gittrack-stale-row,
+  .gittrack-suite-card,
+  .gittrack-git-graph {
     padding-right: 16px;
     padding-left: 16px;
   }
 
-  .graphite-local-metric {
+  .gittrack-local-metric {
     min-height: 74px;
     border-right: 0;
     border-bottom: 1px solid var(--g-line);
     padding: 14px 16px;
   }
 
-  .graphite-git-graph {
+  .gittrack-git-graph {
     font-size: 11px;
   }
 
-  .graphite-stale-row {
+  .gittrack-stale-row {
     grid-template-columns: 18px minmax(0, 1fr);
     padding-top: 10px;
     padding-bottom: 10px;
   }
 
-  .graphite-stale-row em,
-  .graphite-stale-row div {
+  .gittrack-stale-row em,
+  .gittrack-stale-row div {
     grid-column: 2;
   }
 }
 
-/* Flat black polish for the active Graphite surface and overlays */
+/* Flat black polish for the active dashboard surface and overlays */
 html,
 body,
 #root {
   background: #000000;
 }
 
-.graphite-dashboard,
-.graphite-dashboard *,
+.gittrack-dashboard,
+.gittrack-dashboard *,
 .palette-backdrop,
 .palette-backdrop *,
 .modal-backdrop,
@@ -28112,29 +28112,29 @@ body,
   text-shadow: none !important;
 }
 
-.graphite-dashboard {
+.gittrack-dashboard {
   min-height: 100vh;
 }
 
-.graphite-dashboard button,
-.graphite-dashboard input,
-.graphite-dashboard textarea,
-.graphite-dashboard select,
-.graphite-local-head > button,
-.graphite-local-card-head button,
-.graphite-local-bookmarks > button,
-.graphite-local-bookmark button,
-.graphite-suite-actions button,
-.graphite-suite-branches button,
-.graphite-suite-flag button,
-.graphite-stale-row button {
+.gittrack-dashboard button,
+.gittrack-dashboard input,
+.gittrack-dashboard textarea,
+.gittrack-dashboard select,
+.gittrack-local-head > button,
+.gittrack-local-card-head button,
+.gittrack-local-bookmarks > button,
+.gittrack-local-bookmark button,
+.gittrack-suite-actions button,
+.gittrack-suite-branches button,
+.gittrack-suite-flag button,
+.gittrack-stale-row button {
   color: #d8d8d8;
 }
 
-.graphite-dashboard button:focus-visible,
-.graphite-dashboard input:focus-visible,
-.graphite-dashboard textarea:focus-visible,
-.graphite-dashboard select:focus-visible,
+.gittrack-dashboard button:focus-visible,
+.gittrack-dashboard input:focus-visible,
+.gittrack-dashboard textarea:focus-visible,
+.gittrack-dashboard select:focus-visible,
 .settings-dialog button:focus-visible,
 .settings-dialog input:focus-visible,
 .settings-dialog textarea:focus-visible,

@@ -1008,7 +1008,7 @@ function getFileSuggestion(
   intel: PrIntelligence,
 ) {
   if (file.endsWith(".css")) {
-    return "Check responsive density and text wrapping after the Graphite-style surface changes.";
+    return "Check responsive density and text wrapping after the stack dashboard changes.";
   }
   if (file.includes("github") || file.includes("api")) {
     return "Confirm API data still maps into review, Codex, branch, and CI states without losing optional fields.";

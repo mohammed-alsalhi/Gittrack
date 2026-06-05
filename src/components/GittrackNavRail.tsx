@@ -11,19 +11,19 @@ import {
   Sparkles,
 } from "lucide-react";
 
-interface GraphiteNavRailProps {
-  activeItem: GraphiteNavItemId;
-  counts: Record<GraphiteNavItemId, number>;
+interface GittrackNavRailProps {
+  activeItem: GittrackNavItemId;
+  counts: Record<GittrackNavItemId, number>;
   notificationCount: number;
-  onNavigate: (item: GraphiteNavItemId) => void;
+  onNavigate: (item: GittrackNavItemId) => void;
   onOpenCommandPalette: () => void;
   onOpenNotifications: () => void;
   onOpenSettings: () => void;
 }
 
-export type GraphiteNavItemId = "inbox" | "stacks" | "pull_requests" | "branches" | "reviews" | "automation";
+export type GittrackNavItemId = "inbox" | "stacks" | "pull_requests" | "branches" | "reviews" | "automation";
 
-const navItems: Array<{ id: GraphiteNavItemId; label: string; icon: LucideIcon }> = [
+const navItems: Array<{ id: GittrackNavItemId; label: string; icon: LucideIcon }> = [
   { id: "inbox", label: "Inbox", icon: Inbox },
   { id: "stacks", label: "Stacks", icon: Layers3 },
   { id: "pull_requests", label: "Pull requests", icon: GitPullRequest },
@@ -32,7 +32,7 @@ const navItems: Array<{ id: GraphiteNavItemId; label: string; icon: LucideIcon }
   { id: "automation", label: "Automation", icon: Sparkles },
 ];
 
-export function GraphiteNavRail({
+export function GittrackNavRail({
   activeItem,
   counts,
   notificationCount,
@@ -40,14 +40,14 @@ export function GraphiteNavRail({
   onOpenCommandPalette,
   onOpenNotifications,
   onOpenSettings,
-}: GraphiteNavRailProps) {
+}: GittrackNavRailProps) {
   return (
-    <nav className="graphite-nav-rail" aria-label="Primary navigation">
-      <span className="graphite-nav-logo" aria-label="GitTrack">
+    <nav className="gittrack-nav-rail" aria-label="Primary navigation">
+      <span className="gittrack-nav-logo" aria-label="GitTrack">
         gt
       </span>
 
-      <div className="graphite-nav-stack">
+      <div className="gittrack-nav-stack">
         {navItems.map(({ id, label, icon: Icon }) => {
           const count = counts[id] ?? 0;
           const active = activeItem === id;
@@ -61,27 +61,27 @@ export function GraphiteNavRail({
               aria-label={label}
               aria-current={active ? "page" : undefined}
               onClick={() => onNavigate(id)}
-              data-testid={`graphite-nav-${id}`}
+              data-testid={`gittrack-nav-${id}`}
             >
               <Icon size={16} />
-              {count > 0 && <span className="graphite-nav-badge">{count > 9 ? "9+" : count}</span>}
+              {count > 0 && <span className="gittrack-nav-badge">{count > 9 ? "9+" : count}</span>}
             </button>
           );
         })}
       </div>
 
-      <div className="graphite-nav-stack graphite-nav-bottom">
+      <div className="gittrack-nav-stack gittrack-nav-bottom">
         <button type="button" onClick={onOpenCommandPalette} title="Search" aria-label="Search">
           <Search size={16} />
         </button>
-        <button type="button" onClick={onOpenNotifications} title={`Notifications${notificationCount ? ` (${notificationCount})` : ""}`} aria-label="Notifications" data-testid="graphite-nav-notifications">
+        <button type="button" onClick={onOpenNotifications} title={`Notifications${notificationCount ? ` (${notificationCount})` : ""}`} aria-label="Notifications" data-testid="gittrack-nav-notifications">
           <Bell size={16} />
-          {notificationCount > 0 && <span className="graphite-nav-badge badge-urgent">{notificationCount > 9 ? "9+" : notificationCount}</span>}
+          {notificationCount > 0 && <span className="gittrack-nav-badge badge-urgent">{notificationCount > 9 ? "9+" : notificationCount}</span>}
         </button>
         <button type="button" onClick={onOpenSettings} title="Settings" aria-label="Settings">
           <Settings size={16} />
         </button>
-        <span className="graphite-nav-avatar" aria-label="Mohammed">
+        <span className="gittrack-nav-avatar" aria-label="Mohammed">
           M
         </span>
       </div>

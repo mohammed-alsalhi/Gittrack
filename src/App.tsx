@@ -11,8 +11,8 @@ import { ChangeRadarCenter } from "./components/ChangeRadarCenter";
 import { CommandCenter } from "./components/CommandCenter";
 import { CommandPalette } from "./components/CommandPalette";
 import { FlowForecastBoard } from "./components/FlowForecastBoard";
-import { GraphiteDashboard } from "./components/GraphiteDashboard";
-import { GraphiteNavRail, type GraphiteNavItemId } from "./components/GraphiteNavRail";
+import { GittrackDashboard } from "./components/GittrackDashboard";
+import { GittrackNavRail, type GittrackNavItemId } from "./components/GittrackNavRail";
 import { Inspector } from "./components/Inspector";
 import { NotificationCenter, buildNotificationSignals } from "./components/NotificationCenter";
 import { OperationsDock } from "./components/OperationsDock";
@@ -208,7 +208,7 @@ const PERSISTED_KEYS = [
 
 migrateAppDatabase(PERSISTED_KEYS);
 
-const GRAPHITE_NAV_TARGETS: Record<GraphiteNavItemId, string> = {
+const GITTRACK_NAV_TARGETS: Record<GittrackNavItemId, string> = {
   inbox: "review-inbox-workbench",
   stacks: "stack-topology-board",
   pull_requests: "review-signal-matrix",
@@ -217,9 +217,9 @@ const GRAPHITE_NAV_TARGETS: Record<GraphiteNavItemId, string> = {
   automation: "autopilot-playbook-center",
 };
 
-const GRAPHITE_NAV_SCROLL_ORDER: GraphiteNavItemId[] = ["stacks", "branches", "pull_requests", "inbox", "reviews", "automation"];
+const GITTRACK_NAV_SCROLL_ORDER: GittrackNavItemId[] = ["stacks", "branches", "pull_requests", "inbox", "reviews", "automation"];
 
-const GRAPHITE_NAV_LABELS: Record<GraphiteNavItemId, string> = {
+const GITTRACK_NAV_LABELS: Record<GittrackNavItemId, string> = {
   inbox: "review inbox",
   stacks: "stack topology",
   pull_requests: "pull request matrix",
@@ -228,7 +228,7 @@ const GRAPHITE_NAV_LABELS: Record<GraphiteNavItemId, string> = {
   automation: "autopilot playbook",
 };
 
-const SECONDARY_GRAPHITE_NAV_ITEMS = new Set<GraphiteNavItemId>([
+const SECONDARY_GITTRACK_NAV_ITEMS = new Set<GittrackNavItemId>([
   "pull_requests",
   "branches",
   "reviews",
@@ -291,7 +291,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastAction, setLastAction] = useState<string | null>(null);
-  const [activeNavItem, setActiveNavItem] = useState<GraphiteNavItemId>("inbox");
+  const [activeNavItem, setActiveNavItem] = useState<GittrackNavItemId>("inbox");
   const [secondarySystemsOpen, setSecondarySystemsOpen] = useState(false);
   const [operatingPanelsOpen, setOperatingPanelsOpen] = useState(false);
   const [localGitPath, setLocalGitPath] = useState(loadStoredLocalGitPath);
@@ -354,7 +354,7 @@ export default function App() {
     const seen = new Set(notificationSeenIds);
     return notificationSignals.filter((signal) => !seen.has(signal.id)).length;
   }, [notificationSeenIds, notificationSignals]);
-  const graphiteNavCounts = useMemo<Record<GraphiteNavItemId, number>>(
+  const gittrackNavCounts = useMemo<Record<GittrackNavItemId, number>>(
     () => ({
       inbox: filteredPullRequests.length,
       stacks: new Set(repoPullRequests.filter((pr) => pr.state !== "merged").map((pr, index) => getPrIntelligence(pr, index).stackName)).size,
@@ -458,10 +458,10 @@ export default function App() {
     const syncActiveNavItem = () => {
       const rootTop = workspace?.getBoundingClientRect().top ?? 0;
       const marker = rootTop + (topbar?.offsetHeight ?? 0) + 96;
-      let nextItem: GraphiteNavItemId | undefined;
+      let nextItem: GittrackNavItemId | undefined;
 
-      GRAPHITE_NAV_SCROLL_ORDER.forEach((item) => {
-        const target = document.getElementById(GRAPHITE_NAV_TARGETS[item]);
+      GITTRACK_NAV_SCROLL_ORDER.forEach((item) => {
+        const target = document.getElementById(GITTRACK_NAV_TARGETS[item]);
         if (!target) return;
 
         const rect = target.getBoundingClientRect();
@@ -1469,13 +1469,13 @@ export default function App() {
 
   const openStackTopology = () => {
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("graphite-stacks");
-    setLastAction("Opened Graphite stack map.");
+    scrollWorkspaceElementIntoView("gittrack-stacks");
+    setLastAction("Opened stack map.");
   };
 
   const openLocalGitScanner = () => {
     setPaletteOpen(false);
-    scrollWorkspaceElementIntoView("graphite-local");
+    scrollWorkspaceElementIntoView("gittrack-local");
     setLastAction("Opened local Git scanner.");
   };
 
@@ -1883,11 +1883,11 @@ export default function App() {
     }
   };
 
-  const navigateGraphiteRail = (item: GraphiteNavItemId) => {
+  const navigateGittrackRail = (item: GittrackNavItemId) => {
     setWorkspaceLens("all");
     setPaletteOpen(false);
     setActiveNavItem(item);
-    const scrollToTarget = () => scrollWorkspaceElementIntoView(GRAPHITE_NAV_TARGETS[item]);
+    const scrollToTarget = () => scrollWorkspaceElementIntoView(GITTRACK_NAV_TARGETS[item]);
 
     if (item === "inbox" || item === "pull_requests") {
       setActiveFilter("all");
@@ -1897,19 +1897,19 @@ export default function App() {
       setActiveFilter("codex");
     }
 
-    if (SECONDARY_GRAPHITE_NAV_ITEMS.has(item)) {
+    if (SECONDARY_GITTRACK_NAV_ITEMS.has(item)) {
       setSecondarySystemsOpen(true);
       window.requestAnimationFrame(scrollToTarget);
     } else {
       scrollToTarget();
     }
 
-    setLastAction(`Opened ${GRAPHITE_NAV_LABELS[item]}.`);
+    setLastAction(`Opened ${GITTRACK_NAV_LABELS[item]}.`);
   };
 
   return (
     <>
-      <GraphiteDashboard
+      <GittrackDashboard
         repos={data.repos}
         activeRepo={activeRepo}
         source={source}

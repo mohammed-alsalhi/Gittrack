@@ -174,7 +174,7 @@ export function StackReviewNavigator({
         <div>
           <span>Stack navigator</span>
           <h2>{selectedStack ? `${selectedStack.name} review path` : "Build a stack review path"}</h2>
-          <p>Work a Graphite-style stack from the PR inbox: see ordering, review gaps, AI coverage, and the next command without losing context.</p>
+          <p>Work a stacked PR set from the inbox: see ordering, review gaps, AI coverage, and the next command without losing context.</p>
         </div>
         <div className="stack-nav-actions">
           <button

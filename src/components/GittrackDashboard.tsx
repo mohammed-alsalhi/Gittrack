@@ -38,7 +38,7 @@ import type {
 } from "../types";
 import { formatRelativeTime } from "./ui";
 
-interface GraphiteDashboardProps {
+interface GittrackDashboardProps {
   repos: RepoSummary[];
   activeRepo: string;
   source: "sample" | "github";
@@ -87,7 +87,7 @@ type StackFilter = "all" | "active" | "merged";
 type ReviewTab = "all" | "waiting" | "codex" | "requested";
 type BranchFilter = "all" | "ready" | "ahead" | "behind";
 
-export function GraphiteDashboard({
+export function GittrackDashboard({
   repos,
   activeRepo,
   source,
@@ -124,7 +124,7 @@ export function GraphiteDashboard({
   onAddTestingFlag,
   onUpdateTestingFlag,
   onDeleteTestingFlag,
-}: GraphiteDashboardProps) {
+}: GittrackDashboardProps) {
   const [activeView, setActiveView] = useState<"stacks" | "reviews" | "branches" | "local">("stacks");
   const [stackFilter, setStackFilter] = useState<StackFilter>("all");
   const [reviewTab, setReviewTab] = useState<ReviewTab>("all");
@@ -169,7 +169,7 @@ export function GraphiteDashboard({
 
   const jumpTo = (view: "stacks" | "reviews" | "branches" | "local") => {
     setActiveView(view);
-    document.getElementById(`graphite-${view}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById(`gittrack-${view}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const selectRelativeReview = (direction: 1 | -1) => {
@@ -182,11 +182,11 @@ export function GraphiteDashboard({
   };
 
   return (
-    <div className="graphite-dashboard">
-      <aside className="graphite-sidebar">
-        <div className="graphite-brand">Gittrack</div>
+    <div className="gittrack-dashboard">
+      <aside className="gittrack-sidebar">
+        <div className="gittrack-brand">Gittrack</div>
 
-        <label className="graphite-repo-select">
+        <label className="gittrack-repo-select">
           <Github size={17} />
           <select value={activeRepo} onChange={(event) => onRepoChange(event.target.value)} aria-label="Repository">
             {repos.map((repo) => (
@@ -196,21 +196,21 @@ export function GraphiteDashboard({
           <ChevronDown size={15} />
         </label>
 
-        <nav className="graphite-nav" aria-label="Gittrack">
-          <GraphiteNavItem active={activeView === "stacks"} icon={<GitBranch size={17} />} label="Stacks" onClick={() => jumpTo("stacks")} />
-          <GraphiteNavItem icon={<GitPullRequest size={17} />} label="Pull requests" count={pullRequests.length} onClick={() => jumpTo("reviews")} />
-          <GraphiteNavItem active={activeView === "reviews"} icon={<Bot size={17} />} label="Reviews" count={reviewRows.length} onClick={() => jumpTo("reviews")} />
-          <GraphiteNavItem active={activeView === "branches"} icon={<GitMerge size={17} />} label="Branches" onClick={() => jumpTo("branches")} />
-          <GraphiteNavItem active={activeView === "local"} icon={<GitCommitHorizontal size={17} />} label="Local git" count={staleLocalCount + staleRemoteCount + dirtyWorktreeCount} onClick={() => jumpTo("local")} />
-          <GraphiteDivider />
-          <GraphiteNavItem icon={<GitCommitHorizontal size={17} />} label="Commits" onClick={() => jumpTo("branches")} />
-          <GraphiteNavItem icon={<Tag size={17} />} label="Tags" onClick={() => jumpTo("branches")} />
-          <GraphiteNavItem icon={<Search size={17} />} label="Search" onClick={onOpenCommandPalette} />
-          <GraphiteNavItem icon={<Settings size={17} />} label="Settings" onClick={onOpenSettings} />
+        <nav className="gittrack-nav" aria-label="Gittrack">
+          <GittrackNavItem active={activeView === "stacks"} icon={<GitBranch size={17} />} label="Stacks" onClick={() => jumpTo("stacks")} />
+          <GittrackNavItem icon={<GitPullRequest size={17} />} label="Pull requests" count={pullRequests.length} onClick={() => jumpTo("reviews")} />
+          <GittrackNavItem active={activeView === "reviews"} icon={<Bot size={17} />} label="Reviews" count={reviewRows.length} onClick={() => jumpTo("reviews")} />
+          <GittrackNavItem active={activeView === "branches"} icon={<GitMerge size={17} />} label="Branches" onClick={() => jumpTo("branches")} />
+          <GittrackNavItem active={activeView === "local"} icon={<GitCommitHorizontal size={17} />} label="Local git" count={staleLocalCount + staleRemoteCount + dirtyWorktreeCount} onClick={() => jumpTo("local")} />
+          <GittrackDivider />
+          <GittrackNavItem icon={<GitCommitHorizontal size={17} />} label="Commits" onClick={() => jumpTo("branches")} />
+          <GittrackNavItem icon={<Tag size={17} />} label="Tags" onClick={() => jumpTo("branches")} />
+          <GittrackNavItem icon={<Search size={17} />} label="Search" onClick={onOpenCommandPalette} />
+          <GittrackNavItem icon={<Settings size={17} />} label="Settings" onClick={onOpenSettings} />
         </nav>
 
-        <div className="graphite-sidebar-status">
-          <span className="graphite-ready-dot" />
+        <div className="gittrack-sidebar-status">
+          <span className="gittrack-ready-dot" />
           <span>{source === "github" ? "Connected" : "Sample data"}</span>
           <button type="button" onClick={onOpenSettings} aria-label="Settings">
             <Settings size={16} />
@@ -218,9 +218,9 @@ export function GraphiteDashboard({
         </div>
       </aside>
 
-      <section className="graphite-main-shell">
-        <header className="graphite-topbar">
-          <div className="graphite-topbar-nav">
+      <section className="gittrack-main-shell">
+        <header className="gittrack-topbar">
+          <div className="gittrack-topbar-nav">
             <button type="button" aria-label="Previous review" onClick={() => selectRelativeReview(-1)}>
               <ArrowLeft size={17} />
             </button>
@@ -229,7 +229,7 @@ export function GraphiteDashboard({
             </button>
           </div>
 
-          <label className="graphite-global-search">
+          <label className="gittrack-global-search">
             <Search size={17} />
             <input
               value={query}
@@ -239,7 +239,7 @@ export function GraphiteDashboard({
             <button type="button" onClick={onOpenCommandPalette}>Cmd K</button>
           </label>
 
-          <div className="graphite-topbar-actions">
+          <div className="gittrack-topbar-actions">
             <button type="button" onClick={onRefresh} disabled={loading} aria-label="Refresh">
               <span>{loading ? "..." : "/"}</span>
             </button>
@@ -250,59 +250,59 @@ export function GraphiteDashboard({
               <Bell size={17} />
               <i />
             </button>
-            <span className="graphite-avatar">JD</span>
+            <span className="gittrack-avatar">JD</span>
           </div>
         </header>
 
-        <main className="graphite-workspace">
-          <section className="graphite-stack-panel" id="graphite-stacks">
-            <div className="graphite-section-head">
+        <main className="gittrack-workspace">
+          <section className="gittrack-stack-panel" id="gittrack-stacks">
+            <div className="gittrack-section-head">
               <h1>Stacks</h1>
-              <div className="graphite-segments" aria-label="Stack filter">
+              <div className="gittrack-segments" aria-label="Stack filter">
                 <button type="button" className={stackFilter === "all" ? "active" : ""} onClick={() => setStackFilter("all")}>All stacks</button>
                 <button type="button" className={stackFilter === "active" ? "active" : ""} onClick={() => setStackFilter("active")}>Active</button>
                 <button type="button" className={stackFilter === "merged" ? "active" : ""} onClick={() => setStackFilter("merged")}>Merged</button>
               </div>
-              <label className="graphite-checkbox">
+              <label className="gittrack-checkbox">
                 <input type="checkbox" checked={showBaseBranches} onChange={(event) => setShowBaseBranches(event.target.checked)} />
                 <span>Show base branches</span>
               </label>
             </div>
 
-            <div className="graphite-stack-axis">
+            <div className="gittrack-stack-axis">
               <span>Base</span>
               <span>Head</span>
             </div>
 
-            <div className="graphite-stack-map">
-              <div className="graphite-base-node">{defaultBranch}</div>
-              <div className="graphite-rail" aria-hidden="true" />
-              <div className="graphite-stack-list">
+            <div className="gittrack-stack-map">
+              <div className="gittrack-base-node">{defaultBranch}</div>
+              <div className="gittrack-rail" aria-hidden="true" />
+              <div className="gittrack-stack-list">
                 {stackLanes.length ? stackLanes.map((lane, laneIndex) => (
-                  <div className="graphite-lane" key={lane.key}>
+                  <div className="gittrack-lane" key={lane.key}>
                     {lane.rows.map((pr, index) => (
                       <button
                         type="button"
-                        className={`graphite-stack-row ${pr.id === selectedPr?.id ? "selected" : ""}`}
+                        className={`gittrack-stack-row ${pr.id === selectedPr?.id ? "selected" : ""}`}
                         key={pr.id}
                         style={{ marginLeft: `${index * 28}px` }}
                         onClick={() => onSelectPullRequest(pr.id)}
                       >
                         <GitBranch size={16} />
-                        <span className="graphite-stack-copy">
+                        <span className="gittrack-stack-copy">
                           <strong>{pr.branch}</strong>
                           <small>#{pr.number} {pr.title}</small>
                         </span>
                         <StatusDot state={pr.state} codex={pr.codex.reaction} />
-                        <span className="graphite-status-text">{statusText(pr)}</span>
-                        <span className="graphite-mini-avatar">{initials(pr.author.login)}</span>
+                        <span className="gittrack-status-text">{statusText(pr)}</span>
+                        <span className="gittrack-mini-avatar">{initials(pr.author.login)}</span>
                         <MoreHorizontal size={16} />
                       </button>
                     ))}
-                    {laneIndex < stackLanes.length - 1 && <span className="graphite-lane-gap" />}
+                    {laneIndex < stackLanes.length - 1 && <span className="gittrack-lane-gap" />}
                   </div>
                 )) : (
-                  <div className="graphite-empty-state">
+                  <div className="gittrack-empty-state">
                     <strong>No stacks match this view.</strong>
                     <span>Change the search or stack filter to widen the lane.</span>
                   </div>
@@ -310,54 +310,54 @@ export function GraphiteDashboard({
               </div>
             </div>
 
-            <div className="graphite-stack-legend">
+            <div className="gittrack-stack-legend">
               <span><i /> Direct dependency</span>
               <span><b /> Indirect dependency</span>
               <em>{stackPullRequests.length} stacks</em>
             </div>
           </section>
 
-          <aside className="graphite-review-panel" id="graphite-reviews">
-            <div className="graphite-review-head">
+          <aside className="gittrack-review-panel" id="gittrack-reviews">
+            <div className="gittrack-review-head">
               <h2>Reviews</h2>
               <button type="button" onClick={() => setReviewTab("all")}>Inbox <ChevronDown size={14} /></button>
-              <div className="graphite-review-tools">
+              <div className="gittrack-review-tools">
                 <button type="button" aria-label="Cycle review filter" onClick={() => setReviewTab(nextReviewTab(reviewTab))}><SlidersHorizontal size={16} /></button>
                 <button type="button" aria-label="Settings" onClick={onOpenSettings}><Settings size={16} /></button>
               </div>
             </div>
 
-            <div className="graphite-review-tabs">
+            <div className="gittrack-review-tabs">
               <button type="button" className={reviewTab === "all" ? "active" : ""} onClick={() => setReviewTab("all")}>All <span>{pullRequests.length}</span></button>
               <button type="button" className={reviewTab === "waiting" ? "active" : ""} onClick={() => setReviewTab("waiting")}>Waiting <span>{waitingCount}</span></button>
               <button type="button" className={reviewTab === "codex" ? "active" : ""} onClick={() => setReviewTab("codex")}>Codex review <span>{codexCount}</span></button>
               <button type="button" className={reviewTab === "requested" ? "active" : ""} onClick={() => setReviewTab("requested")}>Requested by me <span>{requestedCount}</span></button>
             </div>
 
-            <div className="graphite-review-list">
+            <div className="gittrack-review-list">
               {reviewRows.length ? reviewRows.slice(0, 5).map((pr) => (
                 <div
                   role="button"
                   tabIndex={0}
-                  className={`graphite-review-row ${pr.id === selectedPr?.id ? "selected" : ""}`}
+                  className={`gittrack-review-row ${pr.id === selectedPr?.id ? "selected" : ""}`}
                   key={pr.id}
                   onClick={() => onSelectPullRequest(pr.id)}
                   onKeyDown={(event) => selectReviewWithKeyboard(event, pr.id, onSelectPullRequest)}
                 >
-                  <span className={`graphite-review-icon ${pr.codex.exists ? "codex" : ""}`}>
+                  <span className={`gittrack-review-icon ${pr.codex.exists ? "codex" : ""}`}>
                     {pr.codex.exists ? <Bot size={15} /> : <GitBranch size={15} />}
                   </span>
-                  <span className="graphite-review-copy">
+                  <span className="gittrack-review-copy">
                     <strong>#{pr.number} {pr.title}</strong>
                     <small>{`${pr.branch} -> ${pr.base}`}</small>
                     <em>{reviewRequester(pr)} requested review - {formatRelativeTime(pr.updatedAt)}</em>
                   </span>
-                  <span className={`graphite-review-state ${statusTone(pr)}`}>
+                  <span className={`gittrack-review-state ${statusTone(pr)}`}>
                     {statusText(pr)}
                   </span>
                   <button
                     type="button"
-                    className={`graphite-codex-action ${pr.codex.reaction === "eyes" || !pr.codex.exists ? "watching" : "ready"}`}
+                    className={`gittrack-codex-action ${pr.codex.reaction === "eyes" || !pr.codex.exists ? "watching" : "ready"}`}
                     onClick={(event) => {
                       event.stopPropagation();
                       if (pr.codex.reaction !== "changed" && pr.codex.reaction !== "thumbs_up") onPromoteCodex(pr.id);
@@ -368,24 +368,24 @@ export function GraphiteDashboard({
                   >
                     {pr.codex.reaction === "changed" || pr.codex.reaction === "thumbs_up" ? <ThumbsUp size={14} /> : <Eye size={14} />}
                   </button>
-                  <span className="graphite-mini-avatar">{initials(pr.reviewers[0]?.login ?? pr.author.login)}</span>
+                  <span className="gittrack-mini-avatar">{initials(pr.reviewers[0]?.login ?? pr.author.login)}</span>
                 </div>
               )) : (
-                <div className="graphite-empty-state">
+                <div className="gittrack-empty-state">
                   <strong>No reviews in this lane.</strong>
                   <span>Try All or clear the search.</span>
                 </div>
               )}
             </div>
 
-            <button className="graphite-view-all" type="button" onClick={onOpenCommandPalette}>
+            <button className="gittrack-view-all" type="button" onClick={onOpenCommandPalette}>
               View all reviews
               <kbd>Cmd Enter</kbd>
             </button>
           </aside>
 
-          <section className="graphite-branches-panel" id="graphite-branches">
-            <div className="graphite-branches-head">
+          <section className="gittrack-branches-panel" id="gittrack-branches">
+            <div className="gittrack-branches-head">
               <h2>Branches</h2>
               <label>
                 <Search size={15} />
@@ -397,8 +397,8 @@ export function GraphiteDashboard({
               </div>
             </div>
 
-            <div className="graphite-branch-table">
-              <div className="graphite-branch-row graphite-branch-header">
+            <div className="gittrack-branch-table">
+              <div className="gittrack-branch-row gittrack-branch-header">
                 <span>Name</span>
                 <span>Up to date</span>
                 <span>Behind</span>
@@ -413,22 +413,22 @@ export function GraphiteDashboard({
                 return (
                   <button
                     type="button"
-                    className="graphite-branch-row"
+                    className="gittrack-branch-row"
                     key={branch.id}
                     onClick={() => pr && onSelectPullRequest(pr.id)}
                   >
-                    <span className="graphite-branch-name"><GitBranch size={15} /> {branch.name}</span>
+                    <span className="gittrack-branch-name"><GitBranch size={15} /> {branch.name}</span>
                     <span>{branch.behind === 0 ? <CheckCircle2 size={14} /> : "-"}</span>
                     <span>{branch.behind}</span>
                     <span>{branch.ahead}</span>
                     <span>{pr ? `#${pr.number}` : "-"}</span>
-                    <span className={`graphite-review-state ${pr ? statusTone(pr) : "ready"}`}>{pr ? statusText(pr) : "Ready"}</span>
+                    <span className={`gittrack-review-state ${pr ? statusTone(pr) : "ready"}`}>{pr ? statusText(pr) : "Ready"}</span>
                     <span><code>{commitHash(branch.id)}</code> {pr?.title ?? "Update docs"}</span>
                     <span><MoreHorizontal size={16} /></span>
                   </button>
                 );
               }) : (
-                <div className="graphite-empty-state">
+                <div className="gittrack-empty-state">
                   <strong>No branches match.</strong>
                   <span>Clear the branch search or cycle the branch filter.</span>
                 </div>
@@ -468,7 +468,7 @@ export function GraphiteDashboard({
   );
 }
 
-function GraphiteNavItem({
+function GittrackNavItem({
   active = false,
   icon,
   label,
@@ -490,7 +490,7 @@ function GraphiteNavItem({
   );
 }
 
-function GraphiteDivider() {
+function GittrackDivider() {
   return <hr aria-hidden="true" />;
 }
 
@@ -550,13 +550,13 @@ function LocalGitPanel({
   const staleBranches = [...localBranches, ...remoteBranches].filter((branch) => branch.stale).slice(0, 8);
 
   return (
-    <section className="graphite-local-panel" id="graphite-local">
-      <div className="graphite-local-head">
+    <section className="gittrack-local-panel" id="gittrack-local">
+      <div className="gittrack-local-head">
         <div>
           <h2>Local git</h2>
           <span>{summary ? `${summary.repoName} - ${summary.currentBranch}` : "Scan any local repo path"}</span>
         </div>
-        <label className="graphite-local-path">
+        <label className="gittrack-local-path">
           <Github size={15} />
           <input
             value={path}
@@ -572,14 +572,14 @@ function LocalGitPanel({
         </button>
       </div>
 
-      {error && <div className="graphite-local-error">{error}</div>}
+      {error && <div className="gittrack-local-error">{error}</div>}
 
-      <div className="graphite-local-bookmarks">
+      <div className="gittrack-local-bookmarks">
         <button type="button" onClick={onSaveBookmark} disabled={!path.trim() && !summary}>
           <Plus size={14} /> Save repo
         </button>
         {bookmarks.length ? bookmarks.map((bookmark) => (
-          <span className="graphite-local-bookmark" key={bookmark}>
+          <span className="gittrack-local-bookmark" key={bookmark}>
             <button type="button" onClick={() => onSelectBookmark(bookmark)} title={bookmark}>
               {repoPathLabel(bookmark)}
             </button>
@@ -593,42 +593,42 @@ function LocalGitPanel({
       </div>
 
       {summary ? (
-        <div className="graphite-local-grid">
-          <div className="graphite-local-overview">
+        <div className="gittrack-local-grid">
+          <div className="gittrack-local-overview">
             <MetricTile label="Dirty files" value={summary.dirtyCount} detail={`${summary.stagedCount} staged / ${summary.unstagedCount} unstaged / ${summary.untrackedCount} new`} tone={summary.isDirty ? "amber" : "green"} />
             <MetricTile label="Local stale" value={staleLocalCount} detail={`${summary.staleThresholdDays}+ days or gone`} tone={staleLocalCount ? "amber" : "green"} />
             <MetricTile label="Remote stale" value={staleRemoteCount} detail={`${remoteBranches.length} remote refs`} tone={staleRemoteCount ? "amber" : "green"} />
             <MetricTile label="Worktrees" value={summary.worktrees.length} detail={`${dirtyWorktreeCount} dirty`} tone={dirtyWorktreeCount ? "amber" : "green"} />
           </div>
 
-          <div className="graphite-local-card graphite-git-graph-card">
-            <div className="graphite-local-card-head">
+          <div className="gittrack-local-card gittrack-git-graph-card">
+            <div className="gittrack-local-card-head">
               <strong>Git graph</strong>
               <span>{formatRelativeTime(summary.generatedAt)}</span>
             </div>
-            <pre className="graphite-git-graph">{summary.graphLines.slice(0, 32).join("\n") || "No commits found."}</pre>
+            <pre className="gittrack-git-graph">{summary.graphLines.slice(0, 32).join("\n") || "No commits found."}</pre>
           </div>
 
-          <div className="graphite-local-card">
-            <div className="graphite-local-card-head">
+          <div className="gittrack-local-card">
+            <div className="gittrack-local-card-head">
               <strong>Branches</strong>
               <span>{localBranches.length} local / {remoteBranches.length} remote</span>
             </div>
-            <div className="graphite-local-branch-list">
+            <div className="gittrack-local-branch-list">
               {localBranches.slice(0, 9).map((branch) => (
                 <LocalBranchRow branch={branch} key={`${branch.kind}-${branch.name}`} />
               ))}
             </div>
           </div>
 
-          <div className="graphite-local-card">
-            <div className="graphite-local-card-head">
+          <div className="gittrack-local-card">
+            <div className="gittrack-local-card-head">
               <strong>Worktrees</strong>
               <span>{summary.worktrees.length ? "tracked locally" : "none"}</span>
             </div>
-            <div className="graphite-worktree-list">
+            <div className="gittrack-worktree-list">
               {summary.worktrees.length ? summary.worktrees.map((worktree) => (
-                <div className="graphite-worktree-row" key={worktree.path}>
+                <div className="gittrack-worktree-row" key={worktree.path}>
                   <GitBranch size={14} />
                   <span>
                     <strong>{worktree.branch ?? "detached"}</strong>
@@ -637,7 +637,7 @@ function LocalGitPanel({
                   <em className={worktree.clean ? "ready" : "waiting"}>{worktree.clean ? "clean" : `${worktree.dirtyCount} dirty`}</em>
                 </div>
               )) : (
-                <div className="graphite-empty-state">
+                <div className="gittrack-empty-state">
                   <strong>No worktrees found.</strong>
                   <span>Create one with git worktree add and scan again.</span>
                 </div>
@@ -645,12 +645,12 @@ function LocalGitPanel({
             </div>
           </div>
 
-          <div className="graphite-local-card">
-            <div className="graphite-local-card-head">
+          <div className="gittrack-local-card">
+            <div className="gittrack-local-card-head">
               <strong>Stale refs</strong>
               <span>{staleBranches.length ? "cleanup candidates" : "clear"}</span>
             </div>
-            <div className="graphite-stale-list">
+            <div className="gittrack-stale-list">
               {staleBranches.length ? staleBranches.map((branch) => (
                 <StaleBranchRow
                   branch={branch}
@@ -659,7 +659,7 @@ function LocalGitPanel({
                   key={`${branch.kind}-${branch.name}`}
                 />
               )) : (
-                <div className="graphite-empty-state">
+                <div className="gittrack-empty-state">
                   <strong>No stale refs.</strong>
                   <span>Nothing is older than the stale threshold.</span>
                 </div>
@@ -667,8 +667,8 @@ function LocalGitPanel({
             </div>
           </div>
 
-          <div className="graphite-local-card graphite-suite-panel">
-            <div className="graphite-local-card-head">
+          <div className="gittrack-local-card gittrack-suite-panel">
+            <div className="gittrack-local-card-head">
               <strong>Testing branch suites</strong>
               <button type="button" onClick={onCreateSuite}><Plus size={14} /> New suite</button>
             </div>
@@ -685,7 +685,7 @@ function LocalGitPanel({
                 key={suite.id}
               />
             )) : (
-              <div className="graphite-empty-state">
+              <div className="gittrack-empty-state">
                 <strong>No testing suite yet.</strong>
                 <span>Save branch sets and UI flags, then copy a repeatable run matrix.</span>
               </div>
@@ -693,7 +693,7 @@ function LocalGitPanel({
           </div>
         </div>
       ) : (
-        <div className="graphite-empty-state graphite-local-empty">
+        <div className="gittrack-empty-state gittrack-local-empty">
           <strong>Local Git is ready to scan.</strong>
           <span>Enter a repo path or use the dev server default.</span>
         </div>
@@ -704,7 +704,7 @@ function LocalGitPanel({
 
 function MetricTile({ label, value, detail, tone }: { label: string; value: number; detail: string; tone: "green" | "amber" }) {
   return (
-    <div className={`graphite-local-metric ${tone}`}>
+    <div className={`gittrack-local-metric ${tone}`}>
       <span>{label}</span>
       <strong>{value}</strong>
       <small>{detail}</small>
@@ -719,7 +719,7 @@ function repoPathLabel(path: string) {
 function LocalBranchRow({ branch, compact = false }: { branch: LocalGitSummary["localBranches"][number]; compact?: boolean }) {
   const tone = branch.gone || branch.stale ? "stale" : branch.behind ? "behind" : branch.ahead ? "ahead" : "ready";
   return (
-    <div className={`graphite-local-branch-row ${compact ? "compact" : ""}`}>
+    <div className={`gittrack-local-branch-row ${compact ? "compact" : ""}`}>
       <CircleDot size={13} />
       <span>
         <strong>{branch.name}</strong>
@@ -740,7 +740,7 @@ function StaleBranchRow({
   onDecisionChange: (status: BranchCleanupStatus) => void;
 }) {
   return (
-    <div className="graphite-stale-row">
+    <div className="gittrack-stale-row">
       <CircleDot size={13} />
       <span>
         <strong>{branch.name}</strong>
@@ -790,13 +790,13 @@ function TestingSuiteCard({
   };
 
   return (
-    <div className="graphite-suite-card">
-      <div className="graphite-suite-fields">
+    <div className="gittrack-suite-card">
+      <div className="gittrack-suite-fields">
         <input value={suite.name} onChange={(event) => onUpdateSuite(suite.id, { name: event.target.value })} aria-label="Suite name" />
         <input value={suite.command} onChange={(event) => onUpdateSuite(suite.id, { command: event.target.value })} aria-label="Suite command" />
       </div>
 
-      <div className="graphite-suite-branches">
+      <div className="gittrack-suite-branches">
         {(availableBranches.length ? availableBranches : suite.branches).map((branch) => (
           <button
             type="button"
@@ -809,9 +809,9 @@ function TestingSuiteCard({
         ))}
       </div>
 
-      <div className="graphite-suite-flags">
+      <div className="gittrack-suite-flags">
         {suite.flags.map((flag) => (
-          <div className="graphite-suite-flag" key={flag.id}>
+          <div className="gittrack-suite-flag" key={flag.id}>
             <input
               type="checkbox"
               checked={flag.enabled}
@@ -827,13 +827,13 @@ function TestingSuiteCard({
 
       <textarea value={suite.notes} onChange={(event) => onUpdateSuite(suite.id, { notes: event.target.value })} aria-label="Suite notes" />
 
-      <div className="graphite-suite-preview-head">
+      <div className="gittrack-suite-preview-head">
         <span>Command preview</span>
         <em>{Math.max(1, suite.branches.length)} {suite.branches.length === 1 ? "run" : "runs"}</em>
       </div>
-      <pre className="graphite-suite-preview">{preview}</pre>
+      <pre className="gittrack-suite-preview">{preview}</pre>
 
-      <div className="graphite-suite-actions">
+      <div className="gittrack-suite-actions">
         <button type="button" onClick={() => onAddFlag(suite.id)}><Plus size={14} /> Flag</button>
         <button type="button" onClick={() => onCopySuite(suite)}><Copy size={14} /> Copy matrix</button>
         <button type="button" onClick={() => onDeleteSuite(suite.id)}><Trash2 size={14} /> Delete</button>
@@ -875,7 +875,7 @@ function StatusDot({ state, codex }: { state: PullRequestState; codex: CodexReac
           ? "codex"
           : "waiting";
 
-  return <span className={`graphite-status-dot ${tone}`} />;
+  return <span className={`gittrack-status-dot ${tone}`} />;
 }
 
 function buildStackLanes(pullRequests: PullRequestSummary[]): StackLane[] {
