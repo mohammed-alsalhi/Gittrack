@@ -1854,6 +1854,60 @@ a {
   color: #8d8d8d;
 }
 
+.dialog-link-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dialog-cli-scope {
+  display: grid;
+  gap: 7px;
+  border: 1px solid #222222;
+  border-radius: 6px;
+  background: #000000;
+  color: #d8d8d8;
+  padding: 10px;
+  font-size: 12px;
+}
+
+.dialog-cli-scope strong {
+  color: #f7f7f7;
+  font-size: 13px;
+}
+
+.dialog-cli-scope span,
+.dialog-cli-scope small {
+  color: #8d8d8d;
+  line-height: 1.45;
+}
+
+.dialog-cli-scope div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dialog-link-strip a,
+.dialog-cli-scope a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  border: 1px solid #222222;
+  border-radius: 4px;
+  color: #f7f7f7;
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.dialog-link-strip a:hover,
+.dialog-cli-scope a:hover {
+  border-color: #3a3a3a;
+}
+
 .settings-dialog .control-button,
 .settings-dialog .primary-action,
 .settings-dialog .icon-button {

@@ -7,6 +7,7 @@ import react from "@vitejs/plugin-react";
 
 const execFileAsync = promisify(execFile);
 const STALE_THRESHOLD_DAYS = 30;
+const GITHUB_REPO_LIMIT_PER_OWNER = 1000;
 
 export default defineConfig({
   plugins: [react(), localGitApiPlugin(), githubCliAuthApiPlugin()],
@@ -62,24 +63,52 @@ function githubCliAuthApiPlugin() {
           const token = (await runCommand("gh", ["auth", "token"])).trim();
           if (!token) throw new Error("GitHub CLI did not return a token.");
 
-          const login = await optionalCommand("gh", ["api", "user", "--jq", ".login"], "unknown");
-          const repoJson = await runCommand("gh", [
-            "repo",
-            "list",
-            "--limit",
-            "30",
-            "--json",
-            "nameWithOwner,isArchived,isPrivate,updatedAt",
-          ]);
-          const repos = JSON.parse(repoJson)
-            .filter((repo) => !repo.isArchived)
-            .map((repo) => repo.nameWithOwner)
-            .filter(Boolean);
+          const login = (await runCommand("gh", ["api", "user", "--jq", ".login"])).trim();
+          const orgOutput = await optionalCommand("gh", ["api", "user/orgs", "--paginate", "--jq", ".[].login"], "");
+          const orgs = orgOutput.split(/\r?\n/).map((org) => org.trim()).filter(Boolean);
+          const owners = [...new Set([login, ...orgs].filter(Boolean))];
+          const ownerResults = await Promise.all(owners.map((owner) => listReposForOwner(owner)));
+          const reposBySlug = new Map();
+          const warnings = [];
+
+          ownerResults.forEach((result) => {
+            if (result.error) {
+              warnings.push({
+                owner: result.owner,
+                error: result.error,
+              });
+              return;
+            }
+
+            if (result.warning) {
+              warnings.push({
+                owner: result.owner,
+                error: result.warning,
+              });
+            }
+
+            result.repos
+              .filter((repo) => !repo.isArchived && repo.nameWithOwner)
+              .forEach((repo) => {
+                reposBySlug.set(repo.nameWithOwner, repo);
+              });
+          });
+
+          const repos = [...reposBySlug.values()]
+            .sort((a, b) => Date.parse(b.updatedAt ?? "") - Date.parse(a.updatedAt ?? ""))
+            .map((repo) => repo.nameWithOwner);
 
           sendJson(res, 200, {
-            login: login.trim(),
+            login,
             token,
+            orgs,
+            owners,
             repos,
+            repoLimitPerOwner: GITHUB_REPO_LIMIT_PER_OWNER,
+            warnings,
+            githubUrl: "https://github.com",
+            repositoryUrl: `https://github.com/${login}?tab=repositories`,
+            organizationUrl: "https://github.com/settings/organizations",
             source: "gh-cli",
           });
         } catch (error) {
@@ -92,6 +121,36 @@ function githubCliAuthApiPlugin() {
       });
     },
   };
+}
+
+async function listReposForOwner(owner) {
+  try {
+    const repoJson = await runCommand("gh", [
+      "repo",
+      "list",
+      owner,
+      "--limit",
+      String(GITHUB_REPO_LIMIT_PER_OWNER),
+      "--json",
+      "nameWithOwner,isArchived,isPrivate,updatedAt,url",
+    ]);
+
+    const repos = JSON.parse(repoJson);
+
+    return {
+      owner,
+      repos,
+      warning: repos.length >= GITHUB_REPO_LIMIT_PER_OWNER
+        ? `Reached the ${GITHUB_REPO_LIMIT_PER_OWNER} repo import limit for this owner. Add additional repos manually if needed.`
+        : undefined,
+    };
+  } catch (error) {
+    return {
+      owner,
+      repos: [],
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 async function buildLocalGitSummary(inputPath) {
