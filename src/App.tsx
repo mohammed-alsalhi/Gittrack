@@ -32,6 +32,7 @@ import { StackTopologyBoard } from "./components/StackTopologyBoard";
 import { TopBar } from "./components/TopBar";
 import { WorkspaceLens, WorkspaceLensBar } from "./components/WorkspaceLensBar";
 import { sampleTrackerData } from "./data/sampleData";
+import { migrateAppDatabase, readDatabaseValue, writeDatabaseValue } from "./lib/appDatabase";
 import { loadGitHubTracker } from "./lib/github";
 import { getPrIntelligence } from "./lib/insights";
 import { loadLocalGitSummary } from "./lib/localGit";
@@ -169,6 +170,43 @@ const LOCAL_GIT_PATH_KEY = "gittrack.localGitPath";
 const LOCAL_GIT_BOOKMARKS_KEY = "gittrack.localGitBookmarks";
 const BRANCH_CLEANUP_KEY = "gittrack.branchCleanupDecisions";
 const TESTING_BRANCH_SUITES_KEY = "gittrack.testingBranchSuites";
+const PERSISTED_KEYS = [
+  STORAGE_KEY,
+  WORK_MODE_KEY,
+  AUTOMATION_RULES_KEY,
+  REVIEW_MEMORY_KEY,
+  SHIP_ROOM_BRIEFS_KEY,
+  SHIP_ROOM_MODE_KEY,
+  REVIEW_NUDGES_KEY,
+  STACK_PLANS_KEY,
+  MERGE_IMPACT_KEY,
+  CODEX_SIGNAL_MEMORY_KEY,
+  RELEASE_FORECASTS_KEY,
+  REVIEWER_ROUTES_KEY,
+  REVIEW_RUNS_KEY,
+  WORKSPACE_LENS_KEY,
+  WORKSPACE_BRIEF_ACTIONS_KEY,
+  LAUNCH_COMMANDS_KEY,
+  CONNECTION_CHECKS_KEY,
+  CONNECTION_DIAGNOSTIC_KEY,
+  ATTENTION_ITEMS_KEY,
+  DECISION_SCENARIO_KEY,
+  ACTION_JOURNAL_KEY,
+  DAILY_DIGEST_KEY,
+  OUTBOUND_UPDATES_KEY,
+  BATCH_COMMAND_CART_KEY,
+  STACK_REVIEW_NAVIGATOR_KEY,
+  REVIEW_THREADS_KEY,
+  AUTOPILOT_PLAYBOOK_KEY,
+  CHANGE_RADAR_KEY,
+  NOTIFICATION_SEEN_KEY,
+  LOCAL_GIT_PATH_KEY,
+  LOCAL_GIT_BOOKMARKS_KEY,
+  BRANCH_CLEANUP_KEY,
+  TESTING_BRANCH_SUITES_KEY,
+];
+
+migrateAppDatabase(PERSISTED_KEYS);
 
 const GRAPHITE_NAV_TARGETS: Record<GraphiteNavItemId, string> = {
   inbox: "review-inbox-workbench",
@@ -451,133 +489,133 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(WORK_MODE_KEY, workMode);
+    writeDatabaseValue(WORK_MODE_KEY, workMode);
   }, [workMode]);
 
   useEffect(() => {
-    localStorage.setItem(AUTOMATION_RULES_KEY, JSON.stringify(automationRules));
+    writeDatabaseValue(AUTOMATION_RULES_KEY, JSON.stringify(automationRules));
   }, [automationRules]);
 
   useEffect(() => {
-    localStorage.setItem(REVIEW_MEMORY_KEY, JSON.stringify(reviewMemory));
+    writeDatabaseValue(REVIEW_MEMORY_KEY, JSON.stringify(reviewMemory));
   }, [reviewMemory]);
 
   useEffect(() => {
-    localStorage.setItem(SHIP_ROOM_MODE_KEY, shipRoomMode);
+    writeDatabaseValue(SHIP_ROOM_MODE_KEY, shipRoomMode);
   }, [shipRoomMode]);
 
   useEffect(() => {
-    localStorage.setItem(SHIP_ROOM_BRIEFS_KEY, JSON.stringify(shipRoomBriefs));
+    writeDatabaseValue(SHIP_ROOM_BRIEFS_KEY, JSON.stringify(shipRoomBriefs));
   }, [shipRoomBriefs]);
 
   useEffect(() => {
-    localStorage.setItem(REVIEW_NUDGES_KEY, JSON.stringify(reviewNudges));
+    writeDatabaseValue(REVIEW_NUDGES_KEY, JSON.stringify(reviewNudges));
   }, [reviewNudges]);
 
   useEffect(() => {
-    localStorage.setItem(STACK_PLANS_KEY, JSON.stringify(stackPlans));
+    writeDatabaseValue(STACK_PLANS_KEY, JSON.stringify(stackPlans));
   }, [stackPlans]);
 
   useEffect(() => {
-    localStorage.setItem(MERGE_IMPACT_KEY, JSON.stringify(mergeImpact));
+    writeDatabaseValue(MERGE_IMPACT_KEY, JSON.stringify(mergeImpact));
   }, [mergeImpact]);
 
   useEffect(() => {
-    localStorage.setItem(CODEX_SIGNAL_MEMORY_KEY, JSON.stringify(codexSignalMemory));
+    writeDatabaseValue(CODEX_SIGNAL_MEMORY_KEY, JSON.stringify(codexSignalMemory));
   }, [codexSignalMemory]);
 
   useEffect(() => {
-    localStorage.setItem(RELEASE_FORECASTS_KEY, JSON.stringify(releaseForecasts));
+    writeDatabaseValue(RELEASE_FORECASTS_KEY, JSON.stringify(releaseForecasts));
   }, [releaseForecasts]);
 
   useEffect(() => {
-    localStorage.setItem(REVIEWER_ROUTES_KEY, JSON.stringify(reviewerRoutes));
+    writeDatabaseValue(REVIEWER_ROUTES_KEY, JSON.stringify(reviewerRoutes));
   }, [reviewerRoutes]);
 
   useEffect(() => {
-    localStorage.setItem(REVIEW_RUNS_KEY, JSON.stringify(reviewRuns));
+    writeDatabaseValue(REVIEW_RUNS_KEY, JSON.stringify(reviewRuns));
   }, [reviewRuns]);
 
   useEffect(() => {
-    localStorage.setItem(WORKSPACE_LENS_KEY, workspaceLens);
+    writeDatabaseValue(WORKSPACE_LENS_KEY, workspaceLens);
   }, [workspaceLens]);
 
   useEffect(() => {
-    localStorage.setItem(WORKSPACE_BRIEF_ACTIONS_KEY, JSON.stringify(workspaceBriefActions));
+    writeDatabaseValue(WORKSPACE_BRIEF_ACTIONS_KEY, JSON.stringify(workspaceBriefActions));
   }, [workspaceBriefActions]);
 
   useEffect(() => {
-    localStorage.setItem(LAUNCH_COMMANDS_KEY, JSON.stringify(launchCommands));
+    writeDatabaseValue(LAUNCH_COMMANDS_KEY, JSON.stringify(launchCommands));
   }, [launchCommands]);
 
   useEffect(() => {
-    localStorage.setItem(CONNECTION_CHECKS_KEY, JSON.stringify(connectionChecks));
+    writeDatabaseValue(CONNECTION_CHECKS_KEY, JSON.stringify(connectionChecks));
   }, [connectionChecks]);
 
   useEffect(() => {
     if (connectionDiagnosticAt) {
-      localStorage.setItem(CONNECTION_DIAGNOSTIC_KEY, connectionDiagnosticAt);
+      writeDatabaseValue(CONNECTION_DIAGNOSTIC_KEY, connectionDiagnosticAt);
     }
   }, [connectionDiagnosticAt]);
 
   useEffect(() => {
-    localStorage.setItem(ATTENTION_ITEMS_KEY, JSON.stringify(attentionItems));
+    writeDatabaseValue(ATTENTION_ITEMS_KEY, JSON.stringify(attentionItems));
   }, [attentionItems]);
 
   useEffect(() => {
-    localStorage.setItem(DECISION_SCENARIO_KEY, JSON.stringify(decisionScenario));
+    writeDatabaseValue(DECISION_SCENARIO_KEY, JSON.stringify(decisionScenario));
   }, [decisionScenario]);
 
   useEffect(() => {
-    localStorage.setItem(ACTION_JOURNAL_KEY, JSON.stringify(actionJournal));
+    writeDatabaseValue(ACTION_JOURNAL_KEY, JSON.stringify(actionJournal));
   }, [actionJournal]);
 
   useEffect(() => {
-    localStorage.setItem(DAILY_DIGEST_KEY, JSON.stringify(dailyDigest));
+    writeDatabaseValue(DAILY_DIGEST_KEY, JSON.stringify(dailyDigest));
   }, [dailyDigest]);
 
   useEffect(() => {
-    localStorage.setItem(OUTBOUND_UPDATES_KEY, JSON.stringify(outboundUpdates));
+    writeDatabaseValue(OUTBOUND_UPDATES_KEY, JSON.stringify(outboundUpdates));
   }, [outboundUpdates]);
 
   useEffect(() => {
-    localStorage.setItem(BATCH_COMMAND_CART_KEY, JSON.stringify(batchCommandCart));
+    writeDatabaseValue(BATCH_COMMAND_CART_KEY, JSON.stringify(batchCommandCart));
   }, [batchCommandCart]);
 
   useEffect(() => {
-    localStorage.setItem(STACK_REVIEW_NAVIGATOR_KEY, JSON.stringify(stackReviewNavigator));
+    writeDatabaseValue(STACK_REVIEW_NAVIGATOR_KEY, JSON.stringify(stackReviewNavigator));
   }, [stackReviewNavigator]);
 
   useEffect(() => {
-    localStorage.setItem(REVIEW_THREADS_KEY, JSON.stringify(reviewThreads));
+    writeDatabaseValue(REVIEW_THREADS_KEY, JSON.stringify(reviewThreads));
   }, [reviewThreads]);
 
   useEffect(() => {
-    localStorage.setItem(AUTOPILOT_PLAYBOOK_KEY, JSON.stringify(autopilotPlaybook));
+    writeDatabaseValue(AUTOPILOT_PLAYBOOK_KEY, JSON.stringify(autopilotPlaybook));
   }, [autopilotPlaybook]);
 
   useEffect(() => {
-    localStorage.setItem(CHANGE_RADAR_KEY, JSON.stringify(changeRadar));
+    writeDatabaseValue(CHANGE_RADAR_KEY, JSON.stringify(changeRadar));
   }, [changeRadar]);
 
   useEffect(() => {
-    localStorage.setItem(NOTIFICATION_SEEN_KEY, JSON.stringify(notificationSeenIds.slice(0, 240)));
+    writeDatabaseValue(NOTIFICATION_SEEN_KEY, JSON.stringify(notificationSeenIds.slice(0, 240)));
   }, [notificationSeenIds]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_GIT_PATH_KEY, localGitPath);
+    writeDatabaseValue(LOCAL_GIT_PATH_KEY, localGitPath);
   }, [localGitPath]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_GIT_BOOKMARKS_KEY, JSON.stringify(localGitBookmarks));
+    writeDatabaseValue(LOCAL_GIT_BOOKMARKS_KEY, JSON.stringify(localGitBookmarks));
   }, [localGitBookmarks]);
 
   useEffect(() => {
-    localStorage.setItem(BRANCH_CLEANUP_KEY, JSON.stringify(branchCleanupDecisions));
+    writeDatabaseValue(BRANCH_CLEANUP_KEY, JSON.stringify(branchCleanupDecisions));
   }, [branchCleanupDecisions]);
 
   useEffect(() => {
-    localStorage.setItem(TESTING_BRANCH_SUITES_KEY, JSON.stringify(testingBranchSuites));
+    writeDatabaseValue(TESTING_BRANCH_SUITES_KEY, JSON.stringify(testingBranchSuites));
   }, [testingBranchSuites]);
 
   useEffect(() => {
@@ -744,7 +782,7 @@ export default function App() {
 
   const saveConfig = (nextConfig: TrackerConfig, shouldRefresh: boolean) => {
     setConfig(nextConfig);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextConfig));
+    writeDatabaseValue(STORAGE_KEY, JSON.stringify(nextConfig));
 
     if (!shouldRefresh) {
       setData(sampleTrackerData);
@@ -2762,7 +2800,7 @@ function isEditableTarget(target: EventTarget | null) {
 
 function loadStoredConfig(): TrackerConfig {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = readDatabaseValue(STORAGE_KEY);
     return raw ? { ...defaultConfig, ...JSON.parse(raw) } : defaultConfig;
   } catch {
     return defaultConfig;
@@ -2771,7 +2809,7 @@ function loadStoredConfig(): TrackerConfig {
 
 function loadStoredLocalGitPath() {
   try {
-    return localStorage.getItem(LOCAL_GIT_PATH_KEY) ?? "";
+    return readDatabaseValue(LOCAL_GIT_PATH_KEY) ?? "";
   } catch {
     return "";
   }
@@ -2779,7 +2817,7 @@ function loadStoredLocalGitPath() {
 
 function loadStoredLocalGitBookmarks(): string[] {
   try {
-    const raw = localStorage.getItem(LOCAL_GIT_BOOKMARKS_KEY);
+    const raw = readDatabaseValue(LOCAL_GIT_BOOKMARKS_KEY);
     if (!raw) return [];
 
     const saved = JSON.parse(raw) as unknown;
@@ -2791,7 +2829,7 @@ function loadStoredLocalGitBookmarks(): string[] {
 
 function loadStoredBranchCleanupDecisions(): BranchCleanupDecisionByRef {
   try {
-    const raw = localStorage.getItem(BRANCH_CLEANUP_KEY);
+    const raw = readDatabaseValue(BRANCH_CLEANUP_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -2808,7 +2846,7 @@ function loadStoredBranchCleanupDecisions(): BranchCleanupDecisionByRef {
 
 function loadStoredTestingBranchSuites(): TestingBranchSuite[] {
   try {
-    const raw = localStorage.getItem(TESTING_BRANCH_SUITES_KEY);
+    const raw = readDatabaseValue(TESTING_BRANCH_SUITES_KEY);
     if (!raw) return [];
 
     const saved = JSON.parse(raw) as unknown;
@@ -2820,7 +2858,7 @@ function loadStoredTestingBranchSuites(): TestingBranchSuite[] {
 
 function loadStoredWorkMode(): WorkMode {
   try {
-    const value = localStorage.getItem(WORK_MODE_KEY);
+    const value = readDatabaseValue(WORK_MODE_KEY);
     return value === "focus" || value === "ship" || value === "risk" || value === "ai" ? value : "focus";
   } catch {
     return "focus";
@@ -2829,7 +2867,7 @@ function loadStoredWorkMode(): WorkMode {
 
 function loadStoredWorkspaceLens(): WorkspaceLens {
   try {
-    const value = localStorage.getItem(WORKSPACE_LENS_KEY);
+    const value = readDatabaseValue(WORKSPACE_LENS_KEY);
     return isWorkspaceLens(value) ? value : "all";
   } catch {
     return "all";
@@ -2838,7 +2876,7 @@ function loadStoredWorkspaceLens(): WorkspaceLens {
 
 function loadStoredAutomationRules(): AutomationRule[] {
   try {
-    const raw = localStorage.getItem(AUTOMATION_RULES_KEY);
+    const raw = readDatabaseValue(AUTOMATION_RULES_KEY);
     if (!raw) return defaultAutomationRules;
 
     const saved = JSON.parse(raw) as AutomationRule[];
@@ -2853,7 +2891,7 @@ function loadStoredAutomationRules(): AutomationRule[] {
 
 function loadStoredShipRoomMode(): ShipRoomBriefMode {
   try {
-    const value = localStorage.getItem(SHIP_ROOM_MODE_KEY);
+    const value = readDatabaseValue(SHIP_ROOM_MODE_KEY);
     return isShipRoomMode(value) ? value : "standup";
   } catch {
     return "standup";
@@ -2862,7 +2900,7 @@ function loadStoredShipRoomMode(): ShipRoomBriefMode {
 
 function loadStoredShipRoomBriefs(): ShipRoomBriefSnapshot[] {
   try {
-    const raw = localStorage.getItem(SHIP_ROOM_BRIEFS_KEY);
+    const raw = readDatabaseValue(SHIP_ROOM_BRIEFS_KEY);
     if (!raw) return [];
 
     const saved = JSON.parse(raw) as unknown;
@@ -2874,7 +2912,7 @@ function loadStoredShipRoomBriefs(): ShipRoomBriefSnapshot[] {
 
 function loadStoredReviewNudges(): ReviewNudgeMemoryById {
   try {
-    const raw = localStorage.getItem(REVIEW_NUDGES_KEY);
+    const raw = readDatabaseValue(REVIEW_NUDGES_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, Partial<ReviewNudgeMemory>>;
@@ -2896,7 +2934,7 @@ function loadStoredReviewNudges(): ReviewNudgeMemoryById {
 
 function loadStoredStackPlans(): StackPlanByRepo {
   try {
-    const raw = localStorage.getItem(STACK_PLANS_KEY);
+    const raw = readDatabaseValue(STACK_PLANS_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -2910,7 +2948,7 @@ function loadStoredStackPlans(): StackPlanByRepo {
 
 function loadStoredMergeImpact(): MergeImpactMemoryByRepo {
   try {
-    const raw = localStorage.getItem(MERGE_IMPACT_KEY);
+    const raw = readDatabaseValue(MERGE_IMPACT_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -2924,7 +2962,7 @@ function loadStoredMergeImpact(): MergeImpactMemoryByRepo {
 
 function loadStoredCodexSignalMemory(): CodexSignalMemoryByPr {
   try {
-    const raw = localStorage.getItem(CODEX_SIGNAL_MEMORY_KEY);
+    const raw = readDatabaseValue(CODEX_SIGNAL_MEMORY_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -2938,7 +2976,7 @@ function loadStoredCodexSignalMemory(): CodexSignalMemoryByPr {
 
 function loadStoredReleaseForecasts(): ReleaseForecastByRepo {
   try {
-    const raw = localStorage.getItem(RELEASE_FORECASTS_KEY);
+    const raw = readDatabaseValue(RELEASE_FORECASTS_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -2952,7 +2990,7 @@ function loadStoredReleaseForecasts(): ReleaseForecastByRepo {
 
 function loadStoredReviewerRoutes(): ReviewerRouteMemoryByPr {
   try {
-    const raw = localStorage.getItem(REVIEWER_ROUTES_KEY);
+    const raw = readDatabaseValue(REVIEWER_ROUTES_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -2966,7 +3004,7 @@ function loadStoredReviewerRoutes(): ReviewerRouteMemoryByPr {
 
 function loadStoredReviewRuns(): ReviewRunByRepo {
   try {
-    const raw = localStorage.getItem(REVIEW_RUNS_KEY);
+    const raw = readDatabaseValue(REVIEW_RUNS_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -2980,7 +3018,7 @@ function loadStoredReviewRuns(): ReviewRunByRepo {
 
 function loadStoredWorkspaceBriefActions(): WorkspaceBriefActionMemoryById {
   try {
-    const raw = localStorage.getItem(WORKSPACE_BRIEF_ACTIONS_KEY);
+    const raw = readDatabaseValue(WORKSPACE_BRIEF_ACTIONS_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -2994,7 +3032,7 @@ function loadStoredWorkspaceBriefActions(): WorkspaceBriefActionMemoryById {
 
 function loadStoredLaunchCommands(): LaunchCommandMemoryById {
   try {
-    const raw = localStorage.getItem(LAUNCH_COMMANDS_KEY);
+    const raw = readDatabaseValue(LAUNCH_COMMANDS_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -3008,7 +3046,7 @@ function loadStoredLaunchCommands(): LaunchCommandMemoryById {
 
 function loadStoredConnectionChecks(): ConnectionCheckMemoryById {
   try {
-    const raw = localStorage.getItem(CONNECTION_CHECKS_KEY);
+    const raw = readDatabaseValue(CONNECTION_CHECKS_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -3022,7 +3060,7 @@ function loadStoredConnectionChecks(): ConnectionCheckMemoryById {
 
 function loadStoredConnectionDiagnosticAt(): string | undefined {
   try {
-    const value = localStorage.getItem(CONNECTION_DIAGNOSTIC_KEY);
+    const value = readDatabaseValue(CONNECTION_DIAGNOSTIC_KEY);
     return value || undefined;
   } catch {
     return undefined;
@@ -3031,7 +3069,7 @@ function loadStoredConnectionDiagnosticAt(): string | undefined {
 
 function loadStoredAttentionItems(): AttentionItemMemoryById {
   try {
-    const raw = localStorage.getItem(ATTENTION_ITEMS_KEY);
+    const raw = readDatabaseValue(ATTENTION_ITEMS_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, unknown>;
@@ -3045,7 +3083,7 @@ function loadStoredAttentionItems(): AttentionItemMemoryById {
 
 function loadStoredDecisionScenario(): DecisionScenarioMemory {
   try {
-    const raw = localStorage.getItem(DECISION_SCENARIO_KEY);
+    const raw = readDatabaseValue(DECISION_SCENARIO_KEY);
     if (!raw) return createDecisionScenario();
 
     const saved = JSON.parse(raw) as unknown;
@@ -3067,7 +3105,7 @@ function createDecisionScenario(seed: Partial<DecisionScenarioMemory> = {}): Dec
 
 function loadStoredActionJournal(): ActionJournalEntry[] {
   try {
-    const raw = localStorage.getItem(ACTION_JOURNAL_KEY);
+    const raw = readDatabaseValue(ACTION_JOURNAL_KEY);
     if (!raw) return [];
 
     const saved = JSON.parse(raw) as unknown;
@@ -3079,7 +3117,7 @@ function loadStoredActionJournal(): ActionJournalEntry[] {
 
 function loadStoredDailyDigest(): DigestComposerMemory {
   try {
-    const raw = localStorage.getItem(DAILY_DIGEST_KEY);
+    const raw = readDatabaseValue(DAILY_DIGEST_KEY);
     if (!raw) return createDailyDigestMemory();
 
     const saved = JSON.parse(raw) as unknown;
@@ -3103,7 +3141,7 @@ function createDailyDigestMemory(seed: Partial<DigestComposerMemory> = {}): Dige
 
 function loadStoredOutboundUpdates(): OutboundUpdate[] {
   try {
-    const raw = localStorage.getItem(OUTBOUND_UPDATES_KEY);
+    const raw = readDatabaseValue(OUTBOUND_UPDATES_KEY);
     if (!raw) return [];
 
     const saved = JSON.parse(raw) as unknown;
@@ -3115,7 +3153,7 @@ function loadStoredOutboundUpdates(): OutboundUpdate[] {
 
 function loadStoredBatchCommandCart(): BatchExecutionMemory {
   try {
-    const raw = localStorage.getItem(BATCH_COMMAND_CART_KEY);
+    const raw = readDatabaseValue(BATCH_COMMAND_CART_KEY);
     if (!raw) return createBatchCommandCart();
 
     const saved = JSON.parse(raw) as unknown;
@@ -3127,7 +3165,7 @@ function loadStoredBatchCommandCart(): BatchExecutionMemory {
 
 function loadStoredStackReviewNavigator(): StackReviewNavigatorMemory {
   try {
-    const raw = localStorage.getItem(STACK_REVIEW_NAVIGATOR_KEY);
+    const raw = readDatabaseValue(STACK_REVIEW_NAVIGATOR_KEY);
     if (!raw) return createStackReviewNavigator();
 
     const saved = JSON.parse(raw) as unknown;
@@ -3139,7 +3177,7 @@ function loadStoredStackReviewNavigator(): StackReviewNavigatorMemory {
 
 function loadStoredReviewThreads(): ReviewThreadMemoryById {
   try {
-    const raw = localStorage.getItem(REVIEW_THREADS_KEY);
+    const raw = readDatabaseValue(REVIEW_THREADS_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as unknown;
@@ -3156,7 +3194,7 @@ function loadStoredReviewThreads(): ReviewThreadMemoryById {
 
 function loadStoredAutopilotPlaybook(): AutopilotPlaybookMemory {
   try {
-    const raw = localStorage.getItem(AUTOPILOT_PLAYBOOK_KEY);
+    const raw = readDatabaseValue(AUTOPILOT_PLAYBOOK_KEY);
     if (!raw) return createAutopilotPlaybook();
 
     const saved = JSON.parse(raw) as unknown;
@@ -3168,7 +3206,7 @@ function loadStoredAutopilotPlaybook(): AutopilotPlaybookMemory {
 
 function loadStoredChangeRadar(): ChangeRadarMemory {
   try {
-    const raw = localStorage.getItem(CHANGE_RADAR_KEY);
+    const raw = readDatabaseValue(CHANGE_RADAR_KEY);
     if (!raw) return createChangeRadar();
 
     const saved = JSON.parse(raw) as unknown;
@@ -3180,7 +3218,7 @@ function loadStoredChangeRadar(): ChangeRadarMemory {
 
 function loadStoredNotificationSeenIds(): string[] {
   try {
-    const raw = localStorage.getItem(NOTIFICATION_SEEN_KEY);
+    const raw = readDatabaseValue(NOTIFICATION_SEEN_KEY);
     if (!raw) return [];
 
     const saved = JSON.parse(raw) as unknown;
@@ -3321,7 +3359,7 @@ function isBranchCleanupStatus(value: unknown): value is BranchCleanupStatus {
 
 function loadStoredReviewMemory(): ReviewMemoryByPr {
   try {
-    const raw = localStorage.getItem(REVIEW_MEMORY_KEY);
+    const raw = readDatabaseValue(REVIEW_MEMORY_KEY);
     if (!raw) return {};
 
     const saved = JSON.parse(raw) as Record<string, Partial<ReviewMemory>>;
