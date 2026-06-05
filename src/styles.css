@@ -28093,3 +28093,117 @@ button.graphite-branch-row:hover,
     grid-column: 2;
   }
 }
+
+/* Flat black polish for the active Graphite surface and overlays */
+html,
+body,
+#root {
+  background: #000000;
+}
+
+.graphite-dashboard,
+.graphite-dashboard *,
+.palette-backdrop,
+.palette-backdrop *,
+.modal-backdrop,
+.modal-backdrop * {
+  background-image: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+.graphite-dashboard {
+  min-height: 100vh;
+}
+
+.graphite-dashboard button,
+.graphite-dashboard input,
+.graphite-dashboard textarea,
+.graphite-dashboard select,
+.graphite-local-head > button,
+.graphite-local-card-head button,
+.graphite-local-bookmarks > button,
+.graphite-local-bookmark button,
+.graphite-suite-actions button,
+.graphite-suite-branches button,
+.graphite-suite-flag button,
+.graphite-stale-row button {
+  color: #d8d8d8;
+}
+
+.graphite-dashboard button:focus-visible,
+.graphite-dashboard input:focus-visible,
+.graphite-dashboard textarea:focus-visible,
+.graphite-dashboard select:focus-visible,
+.settings-dialog button:focus-visible,
+.settings-dialog input:focus-visible,
+.settings-dialog textarea:focus-visible,
+.command-palette button:focus-visible,
+.command-palette input:focus-visible {
+  outline: 1px solid #f7f7f7;
+  outline-offset: 2px;
+}
+
+.modal-backdrop,
+.palette-backdrop {
+  background: rgba(0, 0, 0, 0.86) !important;
+}
+
+.settings-dialog,
+.command-palette {
+  border: 1px solid #2a2a2a !important;
+  background: #000000 !important;
+  color: #f7f7f7 !important;
+}
+
+.settings-dialog .dialog-head,
+.settings-dialog .field,
+.settings-dialog .dialog-actions,
+.command-palette .palette-input,
+.command-palette .palette-pro-body,
+.command-palette .palette-results,
+.command-palette .palette-preview,
+.command-palette .palette-result,
+.command-palette .palette-empty,
+.command-palette .preview-grid > div,
+.command-palette .preview-labels em {
+  border-color: #242424 !important;
+  background: #000000 !important;
+  color: #d8d8d8 !important;
+}
+
+.settings-dialog input,
+.settings-dialog textarea,
+.command-palette input {
+  border-color: #242424 !important;
+  background: #000000 !important;
+  color: #f7f7f7 !important;
+}
+
+.settings-dialog .control-button,
+.settings-dialog .primary-action,
+.settings-dialog .icon-button,
+.command-palette .palette-input button,
+.command-palette .palette-result kbd {
+  border-color: #242424 !important;
+  background: #000000 !important;
+  color: #d8d8d8 !important;
+}
+
+.settings-dialog .control-button:hover,
+.settings-dialog .primary-action:hover,
+.settings-dialog .icon-button:hover,
+.command-palette .palette-result:hover,
+.command-palette .palette-result.selected,
+.command-palette .palette-input button:hover {
+  border-color: #3a3a3a !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+.command-palette .palette-result-icon,
+.command-palette .preview-icon {
+  border-color: #2a2a2a !important;
+  background: #000000 !important;
+  color: #f7f7f7 !important;
+}
