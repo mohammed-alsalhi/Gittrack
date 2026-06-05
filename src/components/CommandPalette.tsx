@@ -56,6 +56,7 @@ interface CommandPaletteProps {
   onOpenWorkspaceBrief: () => void;
   onOpenLaunchStudio: () => void;
   onOpenConnectionCenter: () => void;
+  onOpenLocalGit: () => void;
   onModeChange: (mode: WorkMode) => void;
 }
 
@@ -107,6 +108,7 @@ export function CommandPalette({
   onOpenWorkspaceBrief,
   onOpenLaunchStudio,
   onOpenConnectionCenter,
+  onOpenLocalGit,
   onModeChange,
 }: CommandPaletteProps) {
   const [value, setValue] = useState("");
@@ -225,6 +227,17 @@ export function CommandPalette({
       },
       {
         type: "command",
+        id: "local-git",
+        label: "Open local Git scanner",
+        detail: "Scan a local repository path for branches, worktrees, stale refs, and testing branch suites.",
+        shortcut: "LG",
+        keywords: "local git scanner worktree worktrees stale branches testing suites flags",
+        tone: "blue",
+        icon: Terminal,
+        action: onOpenLocalGit,
+      },
+      {
+        type: "command",
         id: "stack-review-navigator",
         label: "Open stack review navigator",
         detail: "Review stacked PRs bottom-up with CI, AI, blockers, and next-command guidance.",
@@ -325,8 +338,8 @@ export function CommandPalette({
       {
         type: "command",
         id: "connection-center",
-        label: "Open GitHub connection cockpit",
-        detail: "Inspect token, repository scope, sync status, and setup diagnostics.",
+        label: "Connect GitHub repositories",
+        detail: "Open settings for GitHub CLI login, tokens, repository scope, and live refresh.",
         shortcut: "G",
         keywords: "github connection token repos sync diagnostic settings",
         tone: "blue",
@@ -399,6 +412,7 @@ export function CommandPalette({
       onOpenSettings,
       onOpenLaunchStudio,
       onOpenConnectionCenter,
+      onOpenLocalGit,
       onOpenTriageBoard,
       onOpenWorkspaceBrief,
       onPinSelected,
@@ -411,7 +425,22 @@ export function CommandPalette({
   );
   const items = useMemo<PaletteItem[]>(() => {
     const query = value.trim().toLowerCase();
+    const activeCommandIds = new Set([
+      "smart-merge",
+      "mark-ready",
+      "pin",
+      "snooze",
+      "automation",
+      "stack-topology",
+      "local-git",
+      "connection-center",
+      "focus-mode",
+      "codex-promote",
+      "risky-work",
+      "settings",
+    ]);
     const commandMatches = commands
+      .filter((command) => activeCommandIds.has(command.id))
       .filter((command) =>
         !query
           ? true
