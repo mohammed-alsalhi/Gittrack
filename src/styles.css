@@ -8948,9 +8948,9 @@ body {
 }
 
 .merge-queue-timeline {
-  border: 1px solid #302e37;
-  border-radius: 6px;
-  background: #1d1c21;
+  border: 1px solid #2a2a2f;
+  border-radius: 4px;
+  background: #111113;
   overflow: hidden;
 }
 
@@ -8958,25 +8958,25 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  min-height: 62px;
-  border-bottom: 1px solid #302e37;
-  background: #242329;
+  gap: 12px;
+  min-height: 56px;
+  border-bottom: 1px solid #2a2a2f;
+  background: transparent;
   padding: 12px 14px;
 }
 
 .queue-timeline-head span {
-  color: #a7a1ff;
+  color: #a1a1aa;
   font-size: 11px;
-  font-weight: 840;
+  font-weight: 760;
   text-transform: uppercase;
 }
 
 .queue-timeline-head h2 {
   margin: 4px 0 0;
-  color: #f8f6fb;
+  color: #f4f4f5;
   font-size: 15px;
-  font-weight: 840;
+  font-weight: 760;
 }
 
 .queue-timeline-head p {
@@ -8992,13 +8992,13 @@ body {
   justify-content: center;
   gap: 8px;
   min-height: 34px;
-  border: 1px solid #e8e5ed;
-  border-radius: 6px;
-  background: #e8e5ed;
+  border: 1px solid #d4d4d8;
+  border-radius: 4px;
+  background: #d4d4d8;
   color: #111113;
   padding: 0 12px;
   font-size: 12px;
-  font-weight: 840;
+  font-weight: 760;
   white-space: nowrap;
 }
 
@@ -9009,9 +9009,9 @@ body {
 }
 
 .queue-timeline-head .queue-plan-button {
-  border-color: #3d3a44;
+  border-color: #333338;
   background: transparent;
-  color: #f4f1f8;
+  color: #f4f4f5;
 }
 
 .queue-timeline-head kbd {
@@ -9025,18 +9025,18 @@ body {
 .queue-stage-rail {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-bottom: 1px solid #302e37;
+  border-bottom: 1px solid #2a2a2f;
 }
 
 .queue-stage {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
-  min-height: 70px;
-  border-right: 1px solid #302e37;
-  background: #1d1c21;
-  color: #d8d4df;
-  padding: 10px 12px;
+  min-height: 48px;
+  border-right: 1px solid #2a2a2f;
+  background: transparent;
+  color: #d4d4d8;
+  padding: 8px 10px;
   text-align: left;
 }
 
@@ -9045,7 +9045,7 @@ body {
 }
 
 .queue-stage:hover {
-  background: #242329;
+  background: #18181b;
 }
 
 .queue-stage span,
@@ -9069,13 +9069,13 @@ body {
   grid-row: 1 / span 2;
   display: inline-grid;
   place-items: center;
-  width: 32px;
-  min-width: 32px;
-  height: 28px;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
   border-radius: 999px;
-  background: #302f38;
-  color: #ffffff;
-  font-size: 13px;
+  background: #27272a;
+  color: #f4f4f5;
+  font-size: 12px;
 }
 
 .queue-stage small {
@@ -9086,39 +9086,20 @@ body {
   font-weight: 740;
 }
 
-.stage-queued strong {
-  background: rgba(114, 219, 143, 0.16);
-  color: #8eefaa;
-}
-
-.stage-ready strong {
-  background: rgba(60, 120, 255, 0.16);
-  color: #9dbbff;
-}
-
-.stage-work strong {
-  background: rgba(241, 184, 98, 0.15);
-  color: #ffd18d;
-}
-
-.stage-blocked strong {
-  background: rgba(255, 119, 131, 0.14);
-  color: #ff9da6;
-}
-
 .queue-timeline-body {
   display: grid;
-  grid-template-columns: minmax(300px, 1.1fr) minmax(230px, 0.8fr) minmax(240px, 0.88fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
 }
 
 .train-order,
 .gate-matrix,
 .blocker-board {
   min-width: 0;
-  border-right: 1px solid #302e37;
+  border-right: 1px solid #2a2a2f;
   padding: 12px;
 }
 
+.gate-matrix,
 .blocker-board {
   border-right: 0;
 }
@@ -9131,7 +9112,7 @@ body {
 }
 
 .queue-panel-title svg {
-  color: #a7a1ff;
+  color: #a1a1aa;
 }
 
 .queue-panel-title strong {
@@ -9157,26 +9138,26 @@ body {
 
 .train-row {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) 74px 48px 42px;
+  grid-template-columns: 26px minmax(0, 1fr) 92px 44px;
   align-items: center;
   gap: 8px;
-  min-height: 42px;
+  min-height: 44px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 4px;
   background: transparent;
-  color: #ddd9e5;
+  color: #e4e4e7;
   padding: 0 8px;
   text-align: left;
 }
 
 .train-row:hover,
 .train-row.selected {
-  border-color: #3b3943;
-  background: #242329;
+  border-color: #333338;
+  background: #18181b;
 }
 
 .train-row.selected {
-  box-shadow: inset 2px 0 0 #3c78ff;
+  box-shadow: inset 2px 0 0 #e4e4e7;
 }
 
 .train-index {
@@ -9192,22 +9173,22 @@ body {
 }
 
 .phase-queued .train-index {
-  background: rgba(114, 219, 143, 0.14);
-  color: #8eefaa;
+  background: #17331f;
+  color: #b7f7c4;
 }
 
 .phase-ready .train-index {
-  background: rgba(60, 120, 255, 0.16);
-  color: #9dbbff;
+  background: #1c2744;
+  color: #bdd2ff;
 }
 
 .phase-work .train-index {
-  background: rgba(241, 184, 98, 0.15);
+  background: #3a2a14;
   color: #ffd18d;
 }
 
 .phase-blocked .train-index {
-  background: rgba(255, 119, 131, 0.14);
+  background: #421c23;
   color: #ff9da6;
 }
 
@@ -9252,9 +9233,9 @@ body {
   display: inline-grid;
   place-items: center;
   min-width: 0;
-  max-width: 74px;
+  max-width: 92px;
   height: 22px;
-  border: 1px solid #3b3943;
+  border: 1px solid #333338;
   border-radius: 999px;
   color: #c7c2ce;
   padding: 0 8px;
@@ -9291,8 +9272,8 @@ body {
   align-items: center;
   gap: 8px;
   min-height: 32px;
-  border-radius: 6px;
-  background: #242329;
+  border-radius: 4px;
+  background: #18181b;
   padding: 0 9px;
 }
 
@@ -9376,9 +9357,9 @@ body {
 .queue-merge-button {
   width: 100%;
   margin-top: 10px;
-  border-color: #3d3a44;
-  background: #242329;
-  color: #f4f1f8;
+  border-color: #333338;
+  background: #18181b;
+  color: #f4f4f5;
 }
 
 .queue-merge-button:disabled {

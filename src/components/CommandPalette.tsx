@@ -131,10 +131,10 @@ export function CommandPalette({
       {
         type: "command",
         id: "merge-train",
-        label: "Open merge train cockpit",
-        detail: "Inspect the persisted train, blocked gates, ready departures, and copy the ship plan.",
+        label: "Open ship queue",
+        detail: "Review ready PRs, blockers, and a copyable queue summary.",
         shortcut: "M",
-        keywords: "merge train cockpit queue timeline ship plan blocked ready staged",
+        keywords: "merge ship queue timeline plan blocked ready staged",
         tone: "green",
         icon: GitMerge,
         action: onOpenMergeQueueTimeline,

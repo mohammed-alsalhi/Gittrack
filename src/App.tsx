@@ -1150,7 +1150,7 @@ export default function App() {
 
     if (mode === "ship") {
       setWorkspaceLens("ship");
-      setLastAction(`Decision plan marked ${selected.length} ${pluralize("PR", selected.length)} ready for the merge train.`);
+      setLastAction(`Decision plan marked ${selected.length} ${pluralize("PR", selected.length)} ready for the ship queue.`);
       return;
     }
 
@@ -1512,7 +1512,7 @@ export default function App() {
     setWorkspaceLens("ship");
     setPaletteOpen(false);
     revealOperatingPanel("merge-queue-timeline");
-    setLastAction("Opened merge train timeline.");
+    setLastAction("Opened ship queue.");
   };
 
   const clearActionJournal = () => {
@@ -1564,7 +1564,7 @@ export default function App() {
         ready_to_merge: true,
       },
     });
-    setLastAction(`Queued #${pr.number} for local merge train.`);
+    setLastAction(`Queued #${pr.number} for the local ship queue.`);
     setPaletteOpen(false);
   };
 
@@ -1783,8 +1783,8 @@ export default function App() {
 
     setLastAction(
       ready.length
-        ? `Merge train ${queued.length ? "running" : "staged"} ${ready.length} PRs: ${ready.map((pr) => `#${pr.number}`).join(", ")}.`
-        : "Merge train is waiting for a ready, unsnoozed PR with green CI.",
+        ? `Ship queue ${queued.length ? "running" : "staged"} ${ready.length} PRs: ${ready.map((pr) => `#${pr.number}`).join(", ")}.`
+        : "Ship queue is waiting for a ready, unsnoozed PR with green CI.",
     );
     setPaletteOpen(false);
   };
@@ -1920,7 +1920,7 @@ export default function App() {
     if (navigator.clipboard) {
       void navigator.clipboard.writeText(text).catch(() => undefined);
     }
-    setLastAction(count ? `Copied merge train plan for ${count} ${pluralize("PR", count)}.` : "Copied empty merge train plan.");
+    setLastAction(count ? `Copied ship queue plan for ${count} ${pluralize("PR", count)}.` : "Copied empty ship queue plan.");
   };
 
   const commitReleaseForecast = (forecast: ReleaseForecastSnapshot) => {
@@ -2213,7 +2213,7 @@ export default function App() {
       />
 
       <LazyFeature
-        label="Merge train"
+        label="Ship queue"
         open={operatingPanelsOpen}
         onOpenChange={setOperatingPanelsOpen}
       >
@@ -2300,7 +2300,7 @@ function LazyFeature({
       >
         <summary>
           <span>Advanced panels</span>
-          <strong>{label} cockpit, staged queues, and ship plan</strong>
+          <strong>{label}: ready PRs and blockers</strong>
           <em>{open ? "Hide" : "Show"}</em>
         </summary>
         <div className="operating-panels-body">

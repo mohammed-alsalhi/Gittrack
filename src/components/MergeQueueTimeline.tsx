@@ -1,17 +1,14 @@
 import {
-  AlertCircle,
-  CheckCircle2,
   Clock3,
   Copy,
   GitMerge,
-  GitPullRequest,
   Play,
   ShieldCheck,
 } from "lucide-react";
 import { getPrIntelligence } from "../lib/insights";
 import { findBranchForPullRequest, getPullRequestActionState, type PullRequestActionState } from "../lib/prActions";
 import type { BranchSummary, MergeQueueMemory, PullRequestSummary, ReviewMemoryByPr } from "../types";
-import { CiBadge, formatRelativeTime, MiniCheck, StatusPill } from "./ui";
+import { CiBadge, formatRelativeTime, MiniCheck } from "./ui";
 
 interface MergeQueueTimelineProps {
   pullRequests: PullRequestSummary[];
@@ -43,7 +40,7 @@ interface QueueItem {
 const phases: Array<{ id: QueuePhase; label: string }> = [
   { id: "queued", label: "Queued" },
   { id: "ready", label: "Ready" },
-  { id: "work", label: "Needs work" },
+  { id: "work", label: "Needs review" },
   { id: "blocked", label: "Blocked" },
 ];
 
@@ -63,25 +60,26 @@ export function MergeQueueTimeline({
   const queuedCount = queue.filter((item) => item.phase === "queued").length;
   const readyCount = queue.filter((item) => item.phase === "ready").length;
   const blockedCount = queue.filter((item) => item.phase === "blocked").length;
-  const trainEta = queuedCount ? `${Math.max(4, queuedCount * 3)}m` : readyCount ? `${Math.max(6, readyCount * 4)}m` : "waiting";
+  const shippableCount = queuedCount + readyCount;
+  const trainEta = queuedCount ? `${Math.max(4, queuedCount * 3)}m` : readyCount ? `${Math.max(6, readyCount * 4)}m` : "none";
   const plan = formatMergeTrainPlan(queue);
 
   return (
     <section className="merge-queue-timeline" id="merge-queue-timeline" data-testid="merge-queue-timeline">
       <div className="queue-timeline-head">
         <div>
-          <span>Merge train</span>
-          <h2>{queuedCount ? `${queuedCount} PRs staged for departure` : `${readyCount} PRs ready to stage`}</h2>
-          <p>{blockedCount} blocked by CI, review, draft, branch drift, or a local queue decision.</p>
+          <span>Ship queue</span>
+          <h2>{shippableCount} ready, {blockedCount} blocked</h2>
+          <p>Green PRs can be staged. Blocked PRs show the next thing to fix.</p>
         </div>
         <div className="queue-train-actions">
           <button type="button" className="queue-plan-button" onClick={() => onCopyTrainPlan(plan, queue.length)}>
             <Copy size={15} />
-            <span>Copy plan</span>
+            <span>Copy</span>
           </button>
           <button type="button" onClick={onRunQueue}>
             <Play size={15} />
-            <span>Run train</span>
+            <span>Stage ready</span>
             <kbd>{trainEta}</kbd>
           </button>
         </div>
@@ -109,11 +107,11 @@ export function MergeQueueTimeline({
         <div className="train-order">
           <div className="queue-panel-title">
             <GitMerge size={15} />
-            <strong>Departure order</strong>
-            <span>{queue.length} active</span>
+            <strong>Pull requests</strong>
+            <span>{queue.length}</span>
           </div>
           <div className="train-list">
-            {queue.slice(0, 7).map((item, index) => (
+            {queue.slice(0, 8).map((item, index) => (
               <button
                 type="button"
                 key={item.pr.id}
@@ -127,7 +125,6 @@ export function MergeQueueTimeline({
                 </span>
                 <span className={`queue-kicker ${item.phase}`}>{phaseLabel(item.phase)}</span>
                 <span className="train-readiness">{item.readiness}/{item.readinessTotal}</span>
-                <span className="train-eta">{item.eta}</span>
               </button>
             ))}
           </div>
@@ -136,48 +133,23 @@ export function MergeQueueTimeline({
         <div className="gate-matrix">
           <div className="queue-panel-title">
             <ShieldCheck size={15} />
-            <strong>Selected gates</strong>
+            <strong>Details</strong>
             <span>{selected ? `#${selected.pr.number}` : "none"}</span>
           </div>
           {selected && (
-            <div className="gate-list">
-              <GateRow label="Queue state" ready={selected.phase === "queued" || selected.phase === "ready"} detail={phaseLabel(selected.phase)} />
-              <GateRow label="CI checks" ready={selected.pr.ci === "success"} detail={selected.pr.ciSummary} />
-              <GateRow label="Review state" ready={selected.actionState.hasReadySignal} detail={selected.pr.state.replace("_", " ")} />
-              <GateRow label="Branch drift" ready={selected.actionState.branchClean} detail={branchDetail(selected)} />
-              <GateRow label="Your decision" ready={selected.memoryDecision === "ready"} detail={selected.memoryDecision} />
-            </div>
-          )}
-        </div>
-
-        <div className="blocker-board">
-          <div className="queue-panel-title">
-            <AlertCircle size={15} />
-            <strong>Blocker board</strong>
-            <span>{blockedCount} hot</span>
-          </div>
-          <div className="blocker-list">
-            {queue.filter((item) => item.blockers.length).slice(0, 5).map((item) => (
-              <button type="button" key={item.pr.id} onClick={() => onSelectPullRequest(item.pr.id)}>
-                <GitPullRequest size={14} />
-                <span>#{item.pr.number}</span>
-                <strong>{item.blockers[0]}</strong>
-                <StatusPill state={item.pr.state} />
-              </button>
-            ))}
-            {!blockedCount && (
-              <div className="blocker-empty">
-                <CheckCircle2 size={16} />
-                All queue gates are clear.
+            <>
+              <div className="gate-list">
+                <GateRow label="State" ready={selected.phase === "queued" || selected.phase === "ready"} detail={phaseLabel(selected.phase)} />
+                <GateRow label="CI" ready={selected.pr.ci === "success"} detail={selected.pr.ciSummary} />
+                <GateRow label="Review" ready={selected.actionState.hasReadySignal} detail={selected.pr.state.replace("_", " ")} />
+                <GateRow label="Branch" ready={selected.actionState.branchClean} detail={branchDetail(selected)} />
               </div>
-            )}
-          </div>
-          {selected && (
-            <button className="queue-merge-button" onClick={() => onSmartMerge(selected.pr.id)} disabled={!selected.actionState.canQueueMerge}>
-              <GitMerge size={15} />
-              Queue selected PR
-              <CiBadge state={selected.pr.ci} />
-            </button>
+              <button className="queue-merge-button" onClick={() => onSmartMerge(selected.pr.id)} disabled={!selected.actionState.canQueueMerge}>
+                <GitMerge size={15} />
+                Queue selected
+                <CiBadge state={selected.pr.ci} />
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -281,7 +253,7 @@ function phaseScore(phase: QueuePhase) {
 function phaseLabel(phase: QueuePhase) {
   if (phase === "queued") return "Queued";
   if (phase === "ready") return "Ready";
-  if (phase === "work") return "Needs work";
+  if (phase === "work") return "Needs review";
   return "Blocked";
 }
 
@@ -308,10 +280,10 @@ function formatMergeTrainPlan(queue: QueueItem[]) {
   const lead = queued.length ? queued : ready;
 
   return [
-    "Merge train plan",
+    "Ship queue plan",
     `Generated ${new Date().toLocaleString()}`,
     "",
-    lead.length ? "Departure order:" : "No PRs are ready to depart.",
+    lead.length ? "Ready PRs:" : "No PRs are ready.",
     ...lead.map((item, index) => `${index + 1}. #${item.pr.number} ${item.pr.title} - ${branchDetail(item)} - ${item.pr.ciSummary}`),
     "",
     blocked.length ? "Blockers:" : "Blockers: none",
