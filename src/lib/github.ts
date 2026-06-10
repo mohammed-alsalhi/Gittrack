@@ -71,6 +71,28 @@ type GitHubStatus = {
   statuses: Array<{ state: string }>;
 };
 
+type GitHubCheckRuns = {
+  total_count: number;
+  check_runs: Array<{
+    status: "queued" | "in_progress" | "completed" | string;
+    conclusion:
+      | "success"
+      | "failure"
+      | "neutral"
+      | "cancelled"
+      | "skipped"
+      | "timed_out"
+      | "action_required"
+      | null
+      | string;
+  }>;
+};
+
+type GitHubCiSnapshot = {
+  status: GitHubStatus | null;
+  checkRuns: GitHubCheckRuns | null;
+};
+
 type GitHubCompare = {
   ahead_by: number;
   behind_by: number;
@@ -87,11 +109,17 @@ export async function loadGitHubTracker(config: TrackerConfig): Promise<TrackerD
   }
 
   const repos = await Promise.all(slugs.map((slug) => fetchRepo(slug, config.token)));
-  const branchGroups = await Promise.all(
-    repos.map((repo) => fetchBranchesForRepo(repo, config.token)),
-  );
   const pullGroups = await Promise.all(repos.map((repo) => fetchPullsForRepo(repo, config.token)));
   const pullRequests = pullGroups.flat();
+  const branchGroups = await Promise.all(
+    repos.map((repo) =>
+      fetchBranchesForRepo(
+        repo,
+        pullRequests.filter((pr) => pr.repo === repo.full_name),
+        config.token,
+      ),
+    ),
+  );
 
   return {
     repos: repos.map<RepoSummary>((repo) => ({
@@ -113,14 +141,29 @@ async function fetchRepo(slug: string, token: string): Promise<GitHubRepo> {
   return request<GitHubRepo>(`/repos/${slug}`, token);
 }
 
-async function fetchBranchesForRepo(repo: GitHubRepo, token: string): Promise<BranchSummary[]> {
-  const branches = await request<GitHubBranch[]>(
-    `/repos/${repo.full_name}/branches?per_page=30`,
+async function fetchBranchesForRepo(
+  repo: GitHubRepo,
+  pullRequests: PullRequestSummary[],
+  token: string,
+): Promise<BranchSummary[]> {
+  const fetchedBranches = await requestPages<GitHubBranch[]>(
+    `/repos/${repo.full_name}/branches?per_page=100`,
     token,
+    3,
   );
+  const branchByName = new Map(fetchedBranches.map((branch) => [branch.name, branch]));
+  pullRequests.forEach((pr) => {
+    if (!branchByName.has(pr.branch)) {
+      branchByName.set(pr.branch, {
+        name: pr.branch,
+        commit: { sha: "", url: "" },
+      });
+    }
+  });
+  const branches = [...branchByName.values()];
 
   const compared = await Promise.all(
-    branches.slice(0, 18).map(async (branch) => {
+    branches.map(async (branch) => {
       if (branch.name === repo.default_branch) {
         return { branch, compare: { ahead_by: 0, behind_by: 0, status: "identical" } };
       }
@@ -137,21 +180,27 @@ async function fetchBranchesForRepo(repo: GitHubRepo, token: string): Promise<Br
     }),
   );
 
-  return compared.map(({ branch, compare }) => ({
-    id: `${repo.full_name}:${branch.name}`,
-    repo: repo.full_name,
-    name: branch.name,
-    health: branchHealth(compare.ahead_by, compare.behind_by, branch.name === repo.default_branch),
-    ahead: compare.ahead_by,
-    behind: compare.behind_by,
-    updatedAt: new Date().toISOString(),
-  }));
+  return compared.map(({ branch, compare }) => {
+    const pr = pullRequests.find((item) => item.branch === branch.name);
+
+    return {
+      id: `${repo.full_name}:${branch.name}`,
+      repo: repo.full_name,
+      name: branch.name,
+      health: branchHealth(compare.ahead_by, compare.behind_by, branch.name === repo.default_branch),
+      ahead: compare.ahead_by,
+      behind: compare.behind_by,
+      updatedAt: pr?.updatedAt ?? new Date().toISOString(),
+      pullRequestNumber: pr?.number,
+    };
+  });
 }
 
 async function fetchPullsForRepo(repo: GitHubRepo, token: string): Promise<PullRequestSummary[]> {
-  const pulls = await request<GitHubPull[]>(
-    `/repos/${repo.full_name}/pulls?state=all&sort=updated&direction=desc&per_page=35`,
+  const pulls = await requestPages<GitHubPull[]>(
+    `/repos/${repo.full_name}/pulls?state=open&sort=updated&direction=desc&per_page=100`,
     token,
+    3,
   );
 
   const hydrated = await Promise.all(
@@ -170,12 +219,13 @@ async function fetchPullsForRepo(repo: GitHubRepo, token: string): Promise<PullR
   return hydrated;
 }
 
-async function fetchStatus(slug: string, sha: string, token: string): Promise<GitHubStatus | null> {
-  try {
-    return await request<GitHubStatus>(`/repos/${slug}/commits/${sha}/status`, token);
-  } catch {
-    return null;
-  }
+async function fetchStatus(slug: string, sha: string, token: string): Promise<GitHubCiSnapshot> {
+  const [status, checkRuns] = await Promise.all([
+    request<GitHubStatus>(`/repos/${slug}/commits/${sha}/status`, token).catch(() => null),
+    request<GitHubCheckRuns>(`/repos/${slug}/commits/${sha}/check-runs?per_page=100`, token).catch(() => null),
+  ]);
+
+  return { status, checkRuns };
 }
 
 async function request<T>(path: string, token: string): Promise<T> {
@@ -197,13 +247,30 @@ async function request<T>(path: string, token: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function requestPages<T extends unknown[]>(
+  path: string,
+  token: string,
+  maxPages: number,
+): Promise<T[number][]> {
+  const results: T[number][] = [];
+  const separator = path.includes("?") ? "&" : "?";
+
+  for (let page = 1; page <= maxPages; page += 1) {
+    const pageResults = await request<T>(`${path}${separator}page=${page}`, token);
+    results.push(...pageResults);
+    if (pageResults.length < 100) break;
+  }
+
+  return results;
+}
+
 function mapPull(
   repo: string,
   pull: GitHubPull,
   reviews: GitHubReview[],
   reviewComments: GitHubComment[],
   issueComments: GitHubComment[],
-  ci: GitHubStatus | null,
+  ci: GitHubCiSnapshot,
 ): PullRequestSummary {
   const reviewEvents = reviews.map<ReviewEvent>((review) => ({
     id: String(review.id),
@@ -346,19 +413,45 @@ function mapPullState(pull: GitHubPull, reviews: GitHubReview[]): PullRequestSta
   return pull.state === "open" ? "waiting_review" : "open";
 }
 
-function mapCheckState(ci: GitHubStatus | null): CheckState {
-  if (!ci || ci.total_count === 0) return "unknown";
-  if (ci.state === "success") return "success";
-  if (ci.state === "pending") return "pending";
+function mapCheckState(ci: GitHubCiSnapshot): CheckState {
+  const checkRuns = ci.checkRuns?.check_runs ?? [];
+  const completedRuns = checkRuns.filter((run) => run.status === "completed");
+  const activeRuns = checkRuns.filter((run) => run.status !== "completed");
+  const failedRun = completedRuns.some((run) =>
+    ["failure", "cancelled", "timed_out", "action_required"].includes(String(run.conclusion)),
+  );
+
+  if (failedRun) return "failure";
+  if (activeRuns.length > 0) return "pending";
+  if (checkRuns.length > 0 && completedRuns.every((run) => ["success", "neutral", "skipped"].includes(String(run.conclusion)))) {
+    return "success";
+  }
+
+  if (!ci.status || ci.status.total_count === 0) return "unknown";
+  if (ci.status.state === "success") return "success";
+  if (ci.status.state === "pending") return "pending";
   return "failure";
 }
 
-function summarizeCi(ci: GitHubStatus | null) {
-  if (!ci || ci.total_count === 0) return "No reported checks";
-  if (ci.state === "success") return "All checks passed";
-  if (ci.state === "pending") return `${ci.total_count} checks running`;
+function summarizeCi(ci: GitHubCiSnapshot) {
+  const checkRuns = ci.checkRuns?.check_runs ?? [];
+  if (checkRuns.length > 0) {
+    const active = checkRuns.filter((run) => run.status !== "completed").length;
+    const failed = checkRuns.filter((run) =>
+      run.status === "completed" &&
+      ["failure", "cancelled", "timed_out", "action_required"].includes(String(run.conclusion)),
+    ).length;
 
-  const failed = ci.statuses.filter((status) => status.state !== "success").length;
+    if (failed > 0) return `${failed} failing ${failed === 1 ? "check" : "checks"}`;
+    if (active > 0) return `${active} checks running`;
+    return `${checkRuns.length} checks passed`;
+  }
+
+  if (!ci.status || ci.status.total_count === 0) return "No reported checks";
+  if (ci.status.state === "success") return "All checks passed";
+  if (ci.status.state === "pending") return `${ci.status.total_count} checks running`;
+
+  const failed = ci.status.statuses.filter((status) => status.state !== "success").length;
   return `${failed} failing ${failed === 1 ? "check" : "checks"}`;
 }
 

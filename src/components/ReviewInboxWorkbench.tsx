@@ -18,6 +18,7 @@ import {
 import type { CSSProperties } from "react";
 import { useMemo } from "react";
 import { getPrIntelligence, type PrIntelligence } from "../lib/insights";
+import type { PullRequestActionState } from "../lib/prActions";
 import type { PullRequestSummary, ReviewMemory, ReviewMemoryByPr } from "../types";
 import { AvatarStack, CiBadge, CodexBadge, formatRelativeTime, StatusPill } from "./ui";
 
@@ -25,6 +26,7 @@ interface ReviewInboxWorkbenchProps {
   pullRequests: PullRequestSummary[];
   selectedId?: string;
   reviewMemory: ReviewMemoryByPr;
+  actionStates?: Record<string, PullRequestActionState>;
   onSelectPullRequest: (id: string) => void;
   onPromoteCodex: (id: string) => void;
   onMarkReady: (id: string) => void;
@@ -49,6 +51,7 @@ export function ReviewInboxWorkbench({
   pullRequests,
   selectedId,
   reviewMemory,
+  actionStates = {},
   onSelectPullRequest,
   onPromoteCodex,
   onMarkReady,
@@ -83,6 +86,7 @@ export function ReviewInboxWorkbench({
   const selectedPr = selectedItem?.pr;
   const selectedIntel = selectedItem?.intel;
   const selectedMemory = selectedItem?.memory;
+  const selectedActionState = selectedPr ? actionStates[selectedPr.id] : undefined;
   const readyPercent =
     selectedIntel === undefined
       ? 0
@@ -302,7 +306,7 @@ export function ReviewInboxWorkbench({
           <div className="review-command-buttons">
             <button
               type="button"
-              disabled={!selectedPr}
+              disabled={!selectedPr || selectedActionState?.canPromoteCodex === false}
               onClick={() => selectedPr && onPromoteCodex(selectedPr.id)}
               data-testid="review-workbench-promote-ai"
             >
@@ -312,7 +316,7 @@ export function ReviewInboxWorkbench({
             </button>
             <button
               type="button"
-              disabled={!selectedPr}
+              disabled={!selectedPr || selectedActionState?.canMarkReady === false}
               onClick={() => selectedPr && onMarkReady(selectedPr.id)}
               data-testid="review-workbench-mark-ready"
             >
@@ -322,7 +326,7 @@ export function ReviewInboxWorkbench({
             </button>
             <button
               type="button"
-              disabled={!selectedPr}
+              disabled={!selectedPr || selectedActionState?.canQueueMerge === false}
               onClick={() => selectedPr && onSmartMerge(selectedPr.id)}
               data-testid="review-workbench-smart-merge"
             >

@@ -177,6 +177,13 @@ export interface MergeImpactMemory {
 
 export type MergeImpactMemoryByRepo = Record<string, MergeImpactMemory>;
 
+export interface MergeQueueMemory {
+  queuedPrIds: string[];
+  queuedAtByPr: Record<string, string>;
+  blockedByPr: Record<string, string>;
+  updatedAt: string;
+}
+
 export type CodexSignalMemoryStatus = "open" | "acknowledged" | "muted";
 
 export interface CodexSignalMemory {

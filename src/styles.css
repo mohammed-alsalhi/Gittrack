@@ -26763,7 +26763,7 @@ body {
 
 .gittrack-review-panel {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) 44px;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   border-bottom: 1px solid var(--g-line);
 }
 
@@ -26855,7 +26855,12 @@ body {
   display: grid;
   grid-template-columns: 92px 30px minmax(0, 1fr);
   min-height: 0;
+  overflow: hidden;
   padding: 8px 30px;
+}
+
+.gittrack-stack-map.dense {
+  padding-right: 22px;
 }
 
 .gittrack-base-node {
@@ -26871,8 +26876,8 @@ body {
 
 .gittrack-rail {
   position: relative;
-  height: calc(100% - 20px);
-  min-height: 260px;
+  align-self: stretch;
+  min-height: 0;
 }
 
 .gittrack-rail::before {
@@ -26890,18 +26895,45 @@ body {
   align-content: start;
   gap: 12px;
   min-width: 0;
+  min-height: 0;
+  overflow: auto;
   padding-top: 1px;
+  padding-right: 8px;
+  padding-bottom: 12px;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.gittrack-stack-list:focus-visible {
+  outline: 1px solid rgba(226, 232, 240, 0.36);
+  outline-offset: -1px;
+}
+
+.gittrack-stack-list::-webkit-scrollbar,
+.gittrack-review-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.gittrack-stack-list::-webkit-scrollbar-thumb,
+.gittrack-review-list::-webkit-scrollbar-thumb {
+  border: 3px solid #000000;
+  border-radius: 999px;
+  background: #2e2e2e;
 }
 
 .gittrack-lane {
   position: relative;
   display: grid;
-  gap: 8px;
+  gap: 0;
+  min-width: 0;
+  border: 1px solid var(--g-line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.012);
 }
 
 .gittrack-lane::before {
   position: absolute;
-  top: 17px;
+  top: 24px;
   left: -30px;
   width: 30px;
   height: 1px;
@@ -26911,7 +26943,7 @@ body {
 
 .gittrack-lane::after {
   position: absolute;
-  top: 12px;
+  top: 19px;
   left: -35px;
   width: 11px;
   height: 11px;
@@ -26920,18 +26952,96 @@ body {
   content: "";
 }
 
-.gittrack-stack-row {
+.gittrack-lane-header {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto auto auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  min-height: 64px;
+  min-height: 42px;
+  border-bottom: 1px solid var(--g-line);
+  padding: 0 12px;
+}
+
+.gittrack-lane-header span,
+.gittrack-lane-header strong,
+.gittrack-lane-header small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gittrack-lane-header strong {
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.gittrack-lane-header small {
+  margin-top: 2px;
+  color: #8f9aa7;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.gittrack-lane-header em {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 22px;
   border: 1px solid var(--g-line);
-  border-radius: 3px;
+  border-radius: 999px;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 760;
+}
+
+.gittrack-lane-rows {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.gittrack-stack-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) minmax(40px, auto) auto auto auto auto;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - var(--stack-offset, 0px));
+  max-width: 100%;
+  margin-left: var(--stack-offset, 0px);
+  min-height: 64px;
+  border: 0;
+  border-bottom: 1px solid var(--g-line);
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.018);
   color: inherit;
   padding: 0 14px;
   text-align: left;
+}
+
+.gittrack-lane-rows .gittrack-stack-row:last-child {
+  border-bottom: 0;
+}
+
+.gittrack-stack-list.dense .gittrack-stack-row {
+  min-height: 52px;
+}
+
+.gittrack-stack-glyph {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--g-line);
+  border-radius: 999px;
+  color: #cbd5e1;
+}
+
+.gittrack-stack-row.deep .gittrack-stack-glyph {
+  color: var(--g-amber);
 }
 
 .gittrack-stack-row:hover,
@@ -26973,6 +27083,20 @@ body {
   font-style: normal;
 }
 
+.gittrack-stack-depth {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  height: 24px;
+  border: 1px solid var(--g-line);
+  border-radius: 999px;
+  color: #aeb8c5;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 720;
+  white-space: nowrap;
+}
+
 .gittrack-status-dot.waiting,
 .gittrack-status-dot.codex {
   background: var(--g-amber);
@@ -26997,10 +27121,6 @@ body {
 
 .gittrack-review-state.blocked {
   color: var(--g-red);
-}
-
-.gittrack-lane-gap {
-  height: 8px;
 }
 
 .gittrack-stack-legend {
@@ -27040,7 +27160,7 @@ body {
 }
 
 .gittrack-review-head {
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 78px;
   border-bottom: 0;
 }
@@ -27105,6 +27225,260 @@ body {
   background: rgba(148, 163, 184, 0.14);
   color: #dbe4ef;
   font-size: 12px;
+}
+
+.gittrack-next-panel {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border-bottom: 1px solid var(--g-line);
+  padding: 12px 24px;
+}
+
+.gittrack-next-panel.empty {
+  align-content: center;
+  min-height: 138px;
+  color: var(--g-muted);
+}
+
+.gittrack-next-panel.empty strong {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.gittrack-next-panel.empty span {
+  max-width: 360px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.gittrack-next-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.gittrack-next-head span:first-child {
+  min-width: 0;
+}
+
+.gittrack-next-head small,
+.gittrack-next-head strong,
+.gittrack-next-head em {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gittrack-next-head small {
+  color: var(--g-muted);
+  font-size: 11px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.gittrack-next-head strong {
+  margin-top: 3px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 760;
+}
+
+.gittrack-next-head em {
+  margin-top: 3px;
+  color: var(--g-muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.gittrack-next-state {
+  display: inline-grid;
+  place-items: center;
+  min-height: 24px;
+  border: 1px solid rgba(84, 211, 111, 0.28);
+  border-radius: 999px;
+  color: var(--g-green);
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.gittrack-next-state.waiting,
+.gittrack-next-state.codex {
+  border-color: rgba(255, 194, 71, 0.28);
+  color: var(--g-amber);
+}
+
+.gittrack-next-state.blocked {
+  border-color: rgba(255, 113, 133, 0.28);
+  color: var(--g-red);
+}
+
+.gittrack-next-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.next-step {
+  min-width: 0;
+  min-height: 54px;
+  border: 1px solid var(--g-line);
+  border-radius: 4px;
+  padding: 9px;
+}
+
+.next-step strong,
+.next-step small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.next-step strong {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.next-step small {
+  margin-top: 5px;
+  color: var(--g-muted);
+  font-size: 11px;
+}
+
+.next-step.green {
+  border-color: rgba(84, 211, 111, 0.24);
+}
+
+.next-step.amber {
+  border-color: rgba(255, 194, 71, 0.28);
+}
+
+.next-step.red {
+  border-color: rgba(255, 113, 133, 0.28);
+}
+
+.next-step.blue {
+  border-color: rgba(145, 167, 255, 0.28);
+}
+
+.gittrack-next-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.gittrack-next-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 32px;
+  border: 1px solid var(--g-line);
+  border-radius: 4px;
+  background: #000000;
+  color: #dbe4ef;
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 720;
+  white-space: nowrap;
+}
+
+.gittrack-next-actions button:hover:not(:disabled) {
+  border-color: #3a3a3a;
+}
+
+.gittrack-next-actions button:disabled {
+  cursor: default;
+  opacity: 0.52;
+}
+
+.gittrack-diagnostics,
+.gittrack-restored-surfaces {
+  --restored-line: rgba(148, 163, 184, 0.18);
+  --restored-bg: #080b0f;
+  background: var(--restored-bg);
+  color: #dbe4ef;
+}
+
+.gittrack-diagnostics {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--restored-line);
+  border-bottom: 1px solid var(--restored-line);
+  padding: 10px 18px;
+}
+
+.gittrack-diagnostics span,
+.gittrack-diagnostics em {
+  color: #8f9aa7;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.gittrack-diagnostics strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gittrack-restored-surfaces {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.gittrack-restored-surfaces > .gittrack-nav-rail {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 40px;
+  border: 1px solid var(--restored-line);
+  border-radius: 5px;
+  padding: 5px 8px;
+}
+
+.gittrack-restored-surfaces .gittrack-nav-stack {
+  display: flex;
+  flex-direction: row;
+}
+
+.gittrack-restored-surfaces .gittrack-nav-bottom {
+  margin-left: auto;
+}
+
+.gittrack-secondary-systems {
+  border: 1px solid var(--restored-line);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.gittrack-secondary-systems > summary {
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.gittrack-secondary-systems .secondary-systems-body {
+  padding: 0 10px 10px;
 }
 
 .gittrack-review-list {
@@ -27398,10 +27772,29 @@ button.gittrack-branch-row:hover {
 
   .gittrack-stack-list {
     grid-column: 1 / -1;
+    overflow: visible;
+    padding-right: 0;
+    padding-bottom: 0;
+  }
+
+  .gittrack-lane::before,
+  .gittrack-lane::after {
+    display: none;
+  }
+
+  .gittrack-lane-header {
+    min-height: 38px;
+    padding: 0 10px;
+  }
+
+  .gittrack-lane-header small,
+  .gittrack-stack-depth {
+    display: none;
   }
 
   .gittrack-stack-row {
     grid-template-columns: 20px minmax(0, 1fr) auto;
+    width: 100%;
     margin-left: 0 !important;
   }
 
@@ -27435,6 +27828,15 @@ button.gittrack-branch-row:hover {
 
   .gittrack-review-tabs::-webkit-scrollbar {
     display: none;
+  }
+
+  .gittrack-next-panel {
+    padding: 12px 16px;
+  }
+
+  .gittrack-next-steps,
+  .gittrack-next-actions {
+    grid-template-columns: 1fr;
   }
 
   .gittrack-branch-row {
@@ -27482,7 +27884,11 @@ button.gittrack-branch-row:hover {
 .gittrack-view-all,
 .gittrack-segments,
 .gittrack-segments button,
+.gittrack-lane,
+.gittrack-lane-header,
 .gittrack-stack-row,
+.gittrack-stack-glyph,
+.gittrack-stack-depth,
 .gittrack-review-row,
 .gittrack-branch-row,
 .gittrack-branches-head label,
@@ -27505,6 +27911,8 @@ button.gittrack-branch-row:hover {
 .gittrack-review-tabs,
 .gittrack-branches-head,
 .gittrack-stack-legend,
+.gittrack-lane,
+.gittrack-lane-header,
 .gittrack-review-row,
 .gittrack-branch-row,
 .gittrack-view-all {
@@ -27521,6 +27929,8 @@ button.gittrack-branch-row:hover {
 .gittrack-segments,
 .gittrack-segments button,
 .gittrack-stack-row,
+.gittrack-stack-glyph,
+.gittrack-stack-depth,
 .gittrack-avatar,
 .gittrack-mini-avatar,
 .gittrack-branches-head label {

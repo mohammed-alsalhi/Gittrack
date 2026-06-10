@@ -1,7 +1,6 @@
 import {
   ArrowLeft,
   ArrowRight,
-  Bell,
   Bot,
   CheckCircle2,
   ChevronDown,
@@ -12,17 +11,15 @@ import {
   GitCommitHorizontal,
   Github,
   GitMerge,
-  GitPullRequest,
   MoreHorizontal,
   Plus,
   Search,
   Settings,
-  SlidersHorizontal,
-  Tag,
   ThumbsUp,
   Trash2,
 } from "lucide-react";
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { getPullRequestActionState } from "../lib/prActions";
 import type {
   BranchSummary,
   BranchCleanupDecisionByRef,
@@ -32,6 +29,7 @@ import type {
   PullRequestState,
   PullRequestSummary,
   RepoSummary,
+  ReviewMemory,
   ReviewMemoryByPr,
   TestingBranchFlag,
   TestingBranchSuite,
@@ -68,6 +66,8 @@ interface GittrackDashboardProps {
   onOpenCommandPalette: () => void;
   onSelectPullRequest: (id: string) => void;
   onPromoteCodex: (id: string) => void;
+  onMarkReady: (id: string) => void;
+  onSmartMerge: (id: string) => void;
   onCreateTestingSuite: () => void;
   onUpdateTestingSuite: (id: string, patch: Partial<TestingBranchSuite>) => void;
   onDeleteTestingSuite: (id: string) => void;
@@ -81,11 +81,22 @@ interface StackLane {
   key: string;
   label: string;
   rows: PullRequestSummary[];
+  isStacked: boolean;
 }
 
 type StackFilter = "all" | "active" | "merged";
 type ReviewTab = "all" | "waiting" | "codex" | "requested";
 type BranchFilter = "all" | "ready" | "ahead" | "behind";
+type NextStepTone = "green" | "amber" | "red" | "blue";
+
+interface NextStep {
+  label: string;
+  detail: string;
+  tone: NextStepTone;
+}
+
+const DENSE_STACK_THRESHOLD = 12;
+const MAX_STACK_INDENT = 5;
 
 export function GittrackDashboard({
   repos,
@@ -117,6 +128,8 @@ export function GittrackDashboard({
   onOpenCommandPalette,
   onSelectPullRequest,
   onPromoteCodex,
+  onMarkReady,
+  onSmartMerge,
   onCreateTestingSuite,
   onUpdateTestingSuite,
   onDeleteTestingSuite,
@@ -142,6 +155,7 @@ export function GittrackDashboard({
     [searchedPullRequests, stackFilter],
   );
   const stackLanes = useMemo(() => buildStackLanes(stackPullRequests), [stackPullRequests]);
+  const denseStackMap = stackPullRequests.length > DENSE_STACK_THRESHOLD || stackLanes.length > 6;
   const visibleBranches = useMemo(
     () =>
       branches
@@ -157,6 +171,10 @@ export function GittrackDashboard({
     [reviewMemory, reviewTab, searchedPullRequests],
   );
   const selectedPr = pullRequests.find((pr) => pr.id === selectedPrId) ?? reviewRows[0];
+  const selectedBranch = selectedPr
+    ? branches.find((branch) => branch.pullRequestNumber === selectedPr.number || branch.name === selectedPr.branch)
+    : undefined;
+  const selectedReviewMemory = selectedPr ? reviewMemory[selectedPr.id] : undefined;
   const waitingCount = pullRequests.filter((pr) => pr.state === "waiting_review").length;
   const codexCount = pullRequests.filter((pr) => pr.codex.exists).length;
   const requestedCount = pullRequests.filter((pr) => pr.author.login === "mohammed").length;
@@ -198,14 +216,9 @@ export function GittrackDashboard({
 
         <nav className="gittrack-nav" aria-label="Gittrack">
           <GittrackNavItem active={activeView === "stacks"} icon={<GitBranch size={17} />} label="Stacks" onClick={() => jumpTo("stacks")} />
-          <GittrackNavItem icon={<GitPullRequest size={17} />} label="Pull requests" count={pullRequests.length} onClick={() => jumpTo("reviews")} />
           <GittrackNavItem active={activeView === "reviews"} icon={<Bot size={17} />} label="Reviews" count={reviewRows.length} onClick={() => jumpTo("reviews")} />
           <GittrackNavItem active={activeView === "branches"} icon={<GitMerge size={17} />} label="Branches" onClick={() => jumpTo("branches")} />
           <GittrackNavItem active={activeView === "local"} icon={<GitCommitHorizontal size={17} />} label="Local git" count={staleLocalCount + staleRemoteCount + dirtyWorktreeCount} onClick={() => jumpTo("local")} />
-          <GittrackDivider />
-          <GittrackNavItem icon={<GitCommitHorizontal size={17} />} label="Commits" onClick={() => jumpTo("branches")} />
-          <GittrackNavItem icon={<Tag size={17} />} label="Tags" onClick={() => jumpTo("branches")} />
-          <GittrackNavItem icon={<Search size={17} />} label="Search" onClick={onOpenCommandPalette} />
           <GittrackNavItem icon={<Settings size={17} />} label="Settings" onClick={onOpenSettings} />
         </nav>
 
@@ -243,13 +256,6 @@ export function GittrackDashboard({
             <button type="button" onClick={onRefresh} disabled={loading} aria-label="Refresh">
               <span>{loading ? "..." : "/"}</span>
             </button>
-            <button type="button" onClick={onOpenCommandPalette} aria-label="Create">
-              <Plus size={17} />
-            </button>
-            <button type="button" aria-label="Notifications" onClick={() => jumpTo("reviews")}>
-              <Bell size={17} />
-              <i />
-            </button>
             <span className="gittrack-avatar">JD</span>
           </div>
         </header>
@@ -274,32 +280,48 @@ export function GittrackDashboard({
               <span>Head</span>
             </div>
 
-            <div className="gittrack-stack-map">
+            <div className={`gittrack-stack-map ${denseStackMap ? "dense" : ""}`}>
               <div className="gittrack-base-node">{defaultBranch}</div>
               <div className="gittrack-rail" aria-hidden="true" />
-              <div className="gittrack-stack-list">
-                {stackLanes.length ? stackLanes.map((lane, laneIndex) => (
-                  <div className="gittrack-lane" key={lane.key}>
-                    {lane.rows.map((pr, index) => (
-                      <button
-                        type="button"
-                        className={`gittrack-stack-row ${pr.id === selectedPr?.id ? "selected" : ""}`}
-                        key={pr.id}
-                        style={{ marginLeft: `${index * 28}px` }}
-                        onClick={() => onSelectPullRequest(pr.id)}
-                      >
-                        <GitBranch size={16} />
-                        <span className="gittrack-stack-copy">
-                          <strong>{pr.branch}</strong>
-                          <small>#{pr.number} {pr.title}</small>
-                        </span>
-                        <StatusDot state={pr.state} codex={pr.codex.reaction} />
-                        <span className="gittrack-status-text">{statusText(pr)}</span>
-                        <span className="gittrack-mini-avatar">{initials(pr.author.login)}</span>
-                        <MoreHorizontal size={16} />
-                      </button>
-                    ))}
-                    {laneIndex < stackLanes.length - 1 && <span className="gittrack-lane-gap" />}
+              <div className={`gittrack-stack-list ${denseStackMap ? "dense" : ""}`} tabIndex={0} aria-label={`${stackPullRequests.length} pull requests grouped into ${stackLanes.length} stack lanes`}>
+                {stackLanes.length ? stackLanes.map((lane) => (
+                  <div className={`gittrack-lane ${lane.isStacked ? "stacked" : "grouped"}`} key={lane.key}>
+                    <div className="gittrack-lane-header">
+                      <span>
+                        <strong>{lane.label}</strong>
+                        <small>{lane.isStacked ? "Stacked dependency lane" : "Branch family"}</small>
+                      </span>
+                      <em>{lane.rows.length}</em>
+                    </div>
+                    <div className="gittrack-lane-rows">
+                      {lane.rows.map((pr, index) => {
+                        const depth = stackDepthForPullRequest(pr, index, lane.isStacked);
+                        return (
+                          <button
+                            type="button"
+                            className={`gittrack-stack-row ${depth > 0 ? "deep" : ""} ${pr.id === selectedPr?.id ? "selected" : ""}`}
+                            key={pr.id}
+                            style={{ "--stack-offset": `${depth * 18}px` } as CSSProperties}
+                            onClick={() => onSelectPullRequest(pr.id)}
+                          >
+                            <span className="gittrack-stack-glyph" aria-hidden="true">
+                              <GitBranch size={15} />
+                            </span>
+                            <span className="gittrack-stack-copy">
+                              <strong>{pr.branch}</strong>
+                              <small>#{pr.number} {pr.title}</small>
+                            </span>
+                            <span className="gittrack-stack-depth">
+                              {lane.isStacked ? `${Math.min(pr.stackIndex ?? index + 1, pr.stackTotal ?? lane.rows.length)}/${pr.stackTotal ?? lane.rows.length}` : pr.base}
+                            </span>
+                            <StatusDot state={pr.state} codex={pr.codex.reaction} />
+                            <span className="gittrack-status-text">{statusText(pr)}</span>
+                            <span className="gittrack-mini-avatar">{initials(pr.author.login)}</span>
+                            <MoreHorizontal size={16} />
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )) : (
                   <div className="gittrack-empty-state">
@@ -311,28 +333,32 @@ export function GittrackDashboard({
             </div>
 
             <div className="gittrack-stack-legend">
-              <span><i /> Direct dependency</span>
-              <span><b /> Indirect dependency</span>
-              <em>{stackPullRequests.length} stacks</em>
+              <span><i /> Branch lane</span>
+              <span><b /> Stacked dependency</span>
+              <em>{stackPullRequests.length} PRs / {stackLanes.length} lanes</em>
             </div>
           </section>
 
           <aside className="gittrack-review-panel" id="gittrack-reviews">
             <div className="gittrack-review-head">
               <h2>Reviews</h2>
-              <button type="button" onClick={() => setReviewTab("all")}>Inbox <ChevronDown size={14} /></button>
-              <div className="gittrack-review-tools">
-                <button type="button" aria-label="Cycle review filter" onClick={() => setReviewTab(nextReviewTab(reviewTab))}><SlidersHorizontal size={16} /></button>
-                <button type="button" aria-label="Settings" onClick={onOpenSettings}><Settings size={16} /></button>
-              </div>
             </div>
 
             <div className="gittrack-review-tabs">
               <button type="button" className={reviewTab === "all" ? "active" : ""} onClick={() => setReviewTab("all")}>All <span>{pullRequests.length}</span></button>
               <button type="button" className={reviewTab === "waiting" ? "active" : ""} onClick={() => setReviewTab("waiting")}>Waiting <span>{waitingCount}</span></button>
               <button type="button" className={reviewTab === "codex" ? "active" : ""} onClick={() => setReviewTab("codex")}>Codex review <span>{codexCount}</span></button>
-              <button type="button" className={reviewTab === "requested" ? "active" : ""} onClick={() => setReviewTab("requested")}>Requested by me <span>{requestedCount}</span></button>
+              <button type="button" className={reviewTab === "requested" ? "active" : ""} onClick={() => setReviewTab("requested")}>Mine <span>{requestedCount}</span></button>
             </div>
+
+            <SelectedNextStepsPanel
+              pr={selectedPr}
+              branch={selectedBranch}
+              memory={selectedReviewMemory}
+              onPromoteCodex={onPromoteCodex}
+              onMarkReady={onMarkReady}
+              onSmartMerge={onSmartMerge}
+            />
 
             <div className="gittrack-review-list">
               {reviewRows.length ? reviewRows.slice(0, 5).map((pr) => (
@@ -378,10 +404,6 @@ export function GittrackDashboard({
               )}
             </div>
 
-            <button className="gittrack-view-all" type="button" onClick={onOpenCommandPalette}>
-              View all reviews
-              <kbd>Cmd Enter</kbd>
-            </button>
           </aside>
 
           <section className="gittrack-branches-panel" id="gittrack-branches">
@@ -393,7 +415,6 @@ export function GittrackDashboard({
               </label>
               <div>
                 <button type="button" onClick={() => setBranchFilter(nextBranchFilter(branchFilter))}>{branchFilterLabel} <ChevronDown size={14} /></button>
-                <button type="button" onClick={onOpenCommandPalette}>New branch</button>
               </div>
             </div>
 
@@ -490,8 +511,69 @@ function GittrackNavItem({
   );
 }
 
-function GittrackDivider() {
-  return <hr aria-hidden="true" />;
+function SelectedNextStepsPanel({
+  pr,
+  branch,
+  memory,
+  onPromoteCodex,
+  onMarkReady,
+  onSmartMerge,
+}: {
+  pr?: PullRequestSummary;
+  branch?: BranchSummary;
+  memory?: ReviewMemory;
+  onPromoteCodex: (id: string) => void;
+  onMarkReady: (id: string) => void;
+  onSmartMerge: (id: string) => void;
+}) {
+  if (!pr) {
+    return (
+      <div className="gittrack-next-panel empty">
+        <strong>Select a pull request</strong>
+        <span>Pick a stack row, review row, or linked branch to see the next operational steps.</span>
+      </div>
+    );
+  }
+
+  const nextSteps = buildSelectedNextSteps(pr, branch, memory);
+  const actionState = getPullRequestActionState(pr, branch, memory);
+
+  return (
+    <div className="gittrack-next-panel" aria-label="Selected pull request next steps">
+      <div className="gittrack-next-head">
+        <span>
+          <small>Next steps</small>
+          <strong>#{pr.number} {pr.title}</strong>
+          <em>{pr.branch} -&gt; {pr.base}</em>
+        </span>
+        <span className={`gittrack-next-state ${statusTone(pr)}`}>{statusText(pr)}</span>
+      </div>
+
+      <div className="gittrack-next-steps">
+        {nextSteps.map((step) => (
+          <span className={`next-step ${step.tone}`} key={step.label}>
+            <strong>{step.label}</strong>
+            <small>{step.detail}</small>
+          </span>
+        ))}
+      </div>
+
+      <div className="gittrack-next-actions">
+        <button type="button" onClick={() => onPromoteCodex(pr.id)} disabled={!actionState.canPromoteCodex}>
+          <Eye size={14} />
+          {actionState.codexReady ? "AI noted" : "Promote AI"}
+        </button>
+        <button type="button" onClick={() => onMarkReady(pr.id)} disabled={!actionState.canMarkReady}>
+          <CheckCircle2 size={14} />
+          {actionState.locallyReady ? "Marked ready" : "Mark ready"}
+        </button>
+        <button type="button" onClick={() => onSmartMerge(pr.id)} disabled={!actionState.canQueueMerge}>
+          <GitMerge size={14} />
+          Queue merge
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function LocalGitPanel({
@@ -881,15 +963,40 @@ function StatusDot({ state, codex }: { state: PullRequestState; codex: CodexReac
 function buildStackLanes(pullRequests: PullRequestSummary[]): StackLane[] {
   const groups = new Map<string, PullRequestSummary[]>();
   pullRequests.forEach((pr) => {
-    const key = pr.stackName ?? pr.branch.split("/")[0] ?? "Stack";
+    const key = pr.stackName ? `stack:${pr.stackName}` : `family:${branchFamily(pr.branch)}`;
     groups.set(key, [...(groups.get(key) ?? []), pr]);
   });
 
-  return Array.from(groups.entries()).map(([key, rows]) => ({
-    key,
-    label: key,
-    rows: rows.slice().sort((a, b) => (a.stackIndex ?? a.number) - (b.stackIndex ?? b.number)),
-  }));
+  return Array.from(groups.entries())
+    .map(([key, rows]) => {
+      const isStacked = rows.some((pr) => typeof pr.stackName === "string" || typeof pr.stackIndex === "number");
+      return {
+        key,
+        label: key.replace(/^(stack|family):/, ""),
+        isStacked,
+        rows: rows.slice().sort((a, b) => {
+          if (isStacked) return (a.stackIndex ?? a.number) - (b.stackIndex ?? b.number);
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        }),
+      };
+    })
+    .sort((a, b) => {
+      if (a.isStacked !== b.isStacked) return a.isStacked ? -1 : 1;
+      return b.rows.length - a.rows.length || a.label.localeCompare(b.label);
+    });
+}
+
+function branchFamily(branch: string) {
+  const [first, second] = branch.split("/");
+  if (!first) return "Unstacked";
+  if (!second) return first;
+  if (/^(feat|feature|fix|chore|docs|test|tests|refactor|cursor|codex)$/i.test(first)) return first;
+  return first;
+}
+
+function stackDepthForPullRequest(pr: PullRequestSummary, index: number, isStacked: boolean) {
+  if (!isStacked) return 0;
+  return Math.max(0, Math.min(MAX_STACK_INDENT, (pr.stackIndex ?? index + 1) - 1));
 }
 
 function sortReviews(pullRequests: PullRequestSummary[], reviewMemory: ReviewMemoryByPr) {
@@ -975,6 +1082,60 @@ function scoreReview(pr: PullRequestSummary, reviewMemory: ReviewMemoryByPr) {
     (pr.state === "waiting_review" ? 16 : 0) +
     (pr.state === "approved" ? 8 : 0)
   );
+}
+
+function buildSelectedNextSteps(pr: PullRequestSummary, branch?: BranchSummary, memory?: ReviewMemory): NextStep[] {
+  const steps: NextStep[] = [];
+  const actionState = getPullRequestActionState(pr, branch, memory);
+  const branchNeedsSync = branch && (branch.health === "diverged" || branch.behind > 0);
+
+  if (pr.ci === "failure") {
+    steps.push({ label: "Fix checks", detail: pr.ciSummary, tone: "red" });
+  } else if (pr.ci === "pending") {
+    steps.push({ label: "Wait for CI", detail: pr.ciSummary, tone: "amber" });
+  } else if (pr.ci === "success") {
+    steps.push({ label: "Checks clear", detail: pr.ciSummary, tone: "green" });
+  } else {
+    steps.push({ label: "Checks unknown", detail: pr.ciSummary, tone: "blue" });
+  }
+
+  if (branchNeedsSync) {
+    steps.push({
+      label: branch.health === "diverged" ? "Rebase branch" : "Sync branch",
+      detail: `${branch.ahead} ahead / ${branch.behind} behind ${pr.base}`,
+      tone: branch.health === "diverged" ? "red" : "amber",
+    });
+  } else if (actionState.branchKnown) {
+    steps.push({
+      label: "Branch clean",
+      detail: branch ? `${branch.ahead} ahead / ${branch.behind} behind ${pr.base}` : "No branch drift found",
+      tone: "green",
+    });
+  } else {
+    steps.push({ label: "Branch unknown", detail: "Refresh branch data before queueing.", tone: "amber" });
+  }
+
+  if (branchNeedsSync) {
+    steps.push({
+      label: "Ready after sync",
+      detail: branch.health === "diverged" ? "Rebase before marking ready." : "Pull base before marking ready.",
+      tone: branch.health === "diverged" ? "red" : "amber",
+    });
+  } else if (pr.state === "changes_requested") {
+    steps.push({ label: "Address review", detail: "Changes requested before this can ship.", tone: "red" });
+  } else if (pr.codex.reaction === "none" && !memory?.checklist.checked_codex) {
+    steps.push({ label: "Get AI signal", detail: "Promote Codex before marking ready.", tone: "amber" });
+  } else if (pr.codex.reaction === "eyes" && !memory?.checklist.checked_codex) {
+    steps.push({ label: "Promote AI", detail: pr.codex.statusText, tone: "amber" });
+  } else if (memory?.decision === "ready") {
+    steps.push({ label: "Ready locally", detail: "Your review checklist is complete.", tone: "green" });
+  } else if (pr.state === "approved" || pr.codex.reaction === "changed" || pr.codex.reaction === "thumbs_up") {
+    steps.push({ label: "Mark ready", detail: "Record the local decision, then queue merge.", tone: "green" });
+  } else {
+    steps.push({ label: "Review pending", detail: "Wait for reviewer approval or more signal.", tone: "blue" });
+  }
+
+  return steps.slice(0, 3);
 }
 
 function statusText(pr: Pick<PullRequestSummary, "state" | "codex">) {

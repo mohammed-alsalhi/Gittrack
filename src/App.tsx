@@ -36,6 +36,7 @@ import { migrateAppDatabase, readDatabaseValue, writeDatabaseValue } from "./lib
 import { loadGitHubTracker } from "./lib/github";
 import { getPrIntelligence } from "./lib/insights";
 import { loadLocalGitSummary } from "./lib/localGit";
+import { findBranchForPullRequest, getPullRequestActionState, type PullRequestActionState } from "./lib/prActions";
 import {
   AttentionItemMemory,
   AttentionItemMemoryById,
@@ -45,13 +46,13 @@ import {
   ActionJournalTone,
   AutopilotPlaybookId,
   AutopilotPlaybookMemory,
+  BranchSummary,
   BranchCleanupDecisionByRef,
   BranchCleanupStatus,
   BatchExecutionMemory,
   BatchExecutionMode,
   ChangeRadarMemory,
   ChangeRadarMode,
-  CodexSignal,
   CodexSignalMemory,
   CodexSignalMemoryByPr,
   CodexSignalMemoryStatus,
@@ -70,6 +71,7 @@ import {
   LocalGitSummary,
   MergeImpactMemory,
   MergeImpactMemoryByRepo,
+  MergeQueueMemory,
   OutboundUpdate,
   OutboundUpdateStatus,
   PullRequestSummary,
@@ -78,7 +80,6 @@ import {
   ReviewChecklistKey,
   ReviewChatMessage,
   ReviewDecision,
-  ReviewEvent,
   ReviewMemory,
   ReviewMemoryByPr,
   ReviewMemoryPatch,
@@ -146,6 +147,7 @@ const SHIP_ROOM_MODE_KEY = "gittrack.shipRoomMode";
 const REVIEW_NUDGES_KEY = "gittrack.reviewNudges";
 const STACK_PLANS_KEY = "gittrack.stackPlans";
 const MERGE_IMPACT_KEY = "gittrack.mergeImpact";
+const MERGE_QUEUE_KEY = "gittrack.mergeQueue";
 const CODEX_SIGNAL_MEMORY_KEY = "gittrack.codexSignalMemory";
 const RELEASE_FORECASTS_KEY = "gittrack.releaseForecasts";
 const REVIEWER_ROUTES_KEY = "gittrack.reviewerRoutes";
@@ -180,6 +182,7 @@ const PERSISTED_KEYS = [
   REVIEW_NUDGES_KEY,
   STACK_PLANS_KEY,
   MERGE_IMPACT_KEY,
+  MERGE_QUEUE_KEY,
   CODEX_SIGNAL_MEMORY_KEY,
   RELEASE_FORECASTS_KEY,
   REVIEWER_ROUTES_KEY,
@@ -229,6 +232,7 @@ const GITTRACK_NAV_LABELS: Record<GittrackNavItemId, string> = {
 };
 
 const SECONDARY_GITTRACK_NAV_ITEMS = new Set<GittrackNavItemId>([
+  "stacks",
   "pull_requests",
   "branches",
   "reviews",
@@ -265,6 +269,7 @@ export default function App() {
   const [reviewNudges, setReviewNudges] = useState<ReviewNudgeMemoryById>(loadStoredReviewNudges);
   const [stackPlans, setStackPlans] = useState<StackPlanByRepo>(loadStoredStackPlans);
   const [mergeImpact, setMergeImpact] = useState<MergeImpactMemoryByRepo>(loadStoredMergeImpact);
+  const [mergeQueue, setMergeQueue] = useState<MergeQueueMemory>(loadStoredMergeQueue);
   const [codexSignalMemory, setCodexSignalMemory] = useState<CodexSignalMemoryByPr>(loadStoredCodexSignalMemory);
   const [releaseForecasts, setReleaseForecasts] = useState<ReleaseForecastByRepo>(loadStoredReleaseForecasts);
   const [reviewerRoutes, setReviewerRoutes] = useState<ReviewerRouteMemoryByPr>(loadStoredReviewerRoutes);
@@ -346,6 +351,11 @@ export default function App() {
   const filters = useMemo(() => buildFilters(repoPullRequests), [repoPullRequests]);
   const activeRepoSummary = data.repos.find((repo) => repo.slug === activeRepo);
   const selectedMemory = selectedPr ? reviewMemory[selectedPr.id] ?? createReviewMemory() : undefined;
+  const actionStates = useMemo(
+    () => buildActionStates(repoPullRequests, repoBranches, reviewMemory),
+    [repoBranches, repoPullRequests, reviewMemory],
+  );
+  const selectedActionState = selectedPr ? actionStates[selectedPr.id] : undefined;
   const notificationSignals = useMemo(
     () => buildNotificationSignals(data.pullRequests, data.branches, reviewMemory),
     [data.branches, data.pullRequests, reviewMemory],
@@ -354,6 +364,10 @@ export default function App() {
     const seen = new Set(notificationSeenIds);
     return notificationSignals.filter((signal) => !seen.has(signal.id)).length;
   }, [notificationSeenIds, notificationSignals]);
+  const queuedMergeCount = useMemo(
+    () => mergeQueue.queuedPrIds.filter((id) => repoPullRequests.some((pr) => pr.id === id)).length,
+    [mergeQueue.queuedPrIds, repoPullRequests],
+  );
   const gittrackNavCounts = useMemo<Record<GittrackNavItemId, number>>(
     () => ({
       inbox: filteredPullRequests.length,
@@ -437,7 +451,7 @@ export default function App() {
 
       if (key === "r") {
         event.preventDefault();
-        setReviewDecision(selectedPr.id, "ready");
+        markReady(selectedPr.id);
         return;
       }
 
@@ -449,7 +463,7 @@ export default function App() {
 
     window.addEventListener("keydown", onReviewShortcut);
     return () => window.removeEventListener("keydown", onReviewShortcut);
-  }, [filteredPullRequests, navigateReviewQueue, paletteOpen, selectedPr, settingsOpen]);
+  }, [filteredPullRequests, navigateReviewQueue, paletteOpen, selectedPr, selectedActionState, settingsOpen]);
 
   useEffect(() => {
     const workspace = document.querySelector<HTMLElement>(".workspace");
@@ -519,6 +533,10 @@ export default function App() {
   useEffect(() => {
     writeDatabaseValue(MERGE_IMPACT_KEY, JSON.stringify(mergeImpact));
   }, [mergeImpact]);
+
+  useEffect(() => {
+    writeDatabaseValue(MERGE_QUEUE_KEY, JSON.stringify(mergeQueue));
+  }, [mergeQueue]);
 
   useEffect(() => {
     writeDatabaseValue(CODEX_SIGNAL_MEMORY_KEY, JSON.stringify(codexSignalMemory));
@@ -797,21 +815,30 @@ export default function App() {
     void refresh(nextConfig);
   };
 
+  const getActionStateForPr = (pr: PullRequestSummary) =>
+    getPullRequestActionState(
+      pr,
+      findBranchForPullRequest(data.branches, pr),
+      reviewMemory[pr.id],
+    );
+
   const promoteCodexReaction = (id: string) => {
-    setData((current) => ({
-      ...current,
-      pullRequests: current.pullRequests.map((pr) =>
-        pr.id === id
-          ? {
-              ...pr,
-              codex: promoteCodex(pr),
-              reviewers: pr.reviewers.some((reviewer) => reviewer.isCodex)
-                ? pr.reviewers
-                : [...pr.reviewers, { login: "Codex", role: "Bot", isCodex: true }],
-            }
-          : pr,
-      ),
-    }));
+    const pr = data.pullRequests.find((item) => item.id === id);
+    const actionState = pr ? getActionStateForPr(pr) : undefined;
+
+    if (actionState && !actionState.canPromoteCodex) {
+      setLastAction(pr ? `#${pr.number} already has a local AI-ready signal.` : "AI signal already noted.");
+      return;
+    }
+
+    updateReviewMemory(id, {
+      checklist: {
+        checked_codex: true,
+      },
+      note: pr
+        ? appendReviewNote(reviewMemory[id]?.note, `Local AI signal noted for #${pr.number}.`)
+        : appendReviewNote(reviewMemory[id]?.note, "Local AI signal noted."),
+    });
     setCodexSignalMemory((current) => ({
       ...current,
       [id]: {
@@ -819,7 +846,7 @@ export default function App() {
         updatedAt: new Date().toISOString(),
       },
     }));
-    setLastAction("Codex review moved from eyes to thumbs up.");
+    setLastAction(pr ? `Local AI signal noted for #${pr.number}.` : "Local AI signal noted.");
   };
 
   const updateCodexSignalStatus = (id: string, status: CodexSignalMemoryStatus) => {
@@ -1059,20 +1086,22 @@ export default function App() {
     }
 
     if (mode === "ai") {
-      setData((current) => ({
-        ...current,
-        pullRequests: current.pullRequests.map((pr) =>
-          selectedSet.has(pr.id)
-            ? {
-                ...pr,
-                codex: promoteCodex(pr),
-                reviewers: pr.reviewers.some((reviewer) => reviewer.isCodex)
-                  ? pr.reviewers
-                  : [...pr.reviewers, { login: "Codex", role: "Bot", isCodex: true }],
-              }
-            : pr,
-        ),
-      }));
+      setReviewMemory((current) => {
+        const next = { ...current };
+        selected.forEach((pr) => {
+          const existing = next[pr.id] ?? createReviewMemory();
+          next[pr.id] = {
+            ...existing,
+            checklist: {
+              ...existing.checklist,
+              checked_codex: true,
+            },
+            note: appendReviewNote(existing.note, `Local AI signal noted for #${pr.number}.`),
+            updatedAt: new Date().toISOString(),
+          };
+        });
+        return next;
+      });
       setCodexSignalMemory((current) => ({
         ...current,
         ...Object.fromEntries(
@@ -1493,8 +1522,67 @@ export default function App() {
 
   const smartMerge = (id: string) => {
     const pr = data.pullRequests.find((item) => item.id === id);
-    setLastAction(pr ? `Smart merge queued for #${pr.number}.` : "Smart merge queued.");
+    if (!pr) {
+      setLastAction("Unable to queue merge: pull request was not found.");
+      return;
+    }
+
+    const actionState = getActionStateForPr(pr);
+    const now = new Date().toISOString();
+
+    if (!actionState.canQueueMerge) {
+      const reason = actionState.blockedReason ?? "Pull request is not merge-ready.";
+      setMergeQueue((current) => ({
+        queuedPrIds: current.queuedPrIds.filter((queuedId) => queuedId !== id),
+        queuedAtByPr: omitRecordKey(current.queuedAtByPr, id),
+        blockedByPr: {
+          ...current.blockedByPr,
+          [id]: reason,
+        },
+        updatedAt: now,
+      }));
+      setLastAction(`#${pr.number} was not queued: ${reason}`);
+      setPaletteOpen(false);
+      return;
+    }
+
+    setMergeQueue((current) => ({
+      queuedPrIds: [id, ...current.queuedPrIds.filter((queuedId) => queuedId !== id)].slice(0, 80),
+      queuedAtByPr: {
+        ...current.queuedAtByPr,
+        [id]: now,
+      },
+      blockedByPr: omitRecordKey(current.blockedByPr, id),
+      updatedAt: now,
+    }));
+    updateReviewMemory(id, {
+      decision: "ready",
+      checklist: {
+        read_diff: true,
+        validated_ci: true,
+        checked_codex: true,
+        ready_to_merge: true,
+      },
+    });
+    setLastAction(`Queued #${pr.number} for local merge train.`);
     setPaletteOpen(false);
+  };
+
+  const markReady = (id: string) => {
+    const pr = data.pullRequests.find((item) => item.id === id);
+    if (!pr) {
+      setLastAction("Unable to mark ready: pull request was not found.");
+      return;
+    }
+
+    const actionState = getActionStateForPr(pr);
+    if (!actionState.canMarkReady) {
+      setLastAction(`#${pr.number} was not marked ready: ${actionState.blockedReason ?? "it is already ready"}`);
+      setPaletteOpen(false);
+      return;
+    }
+
+    setReviewDecision(id, "ready");
   };
 
   const updateReviewMemory = (id: string, patch: ReviewMemoryPatch) => {
@@ -1942,6 +2030,8 @@ export default function App() {
         onOpenCommandPalette={() => setPaletteOpen(true)}
         onSelectPullRequest={setSelectedPrId}
         onPromoteCodex={promoteCodexReaction}
+        onMarkReady={markReady}
+        onSmartMerge={smartMerge}
         onCreateTestingSuite={createTestingBranchSuite}
         onUpdateTestingSuite={updateTestingBranchSuite}
         onDeleteTestingSuite={deleteTestingBranchSuite}
@@ -1949,6 +2039,161 @@ export default function App() {
         onAddTestingFlag={addTestingBranchFlag}
         onUpdateTestingFlag={updateTestingBranchFlag}
         onDeleteTestingFlag={deleteTestingBranchFlag}
+      />
+
+      <section className="gittrack-diagnostics" aria-label="Data source diagnostics">
+        <span>{source === "github" ? "Live GitHub data" : "Sample data"}</span>
+        <strong>
+          {source === "github"
+            ? "GitHub sync is active. Local AI and merge-queue actions are stored in this browser only."
+            : "Sample workspace is active. Connect GitHub for live PR, branch, and CI state."}
+        </strong>
+        <em>{queuedMergeCount} queued locally</em>
+      </section>
+
+      <section className="gittrack-restored-surfaces" aria-label="Gittrack advanced operations">
+        <GittrackNavRail
+          activeItem={activeNavItem}
+          counts={gittrackNavCounts}
+          notificationCount={unreadNotificationCount}
+          onNavigate={navigateGittrackRail}
+          onOpenCommandPalette={() => setPaletteOpen(true)}
+          onOpenNotifications={() => setNotificationOpen(true)}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
+
+        <ReviewInboxWorkbench
+          pullRequests={filteredPullRequests}
+          selectedId={selectedPr?.id}
+          reviewMemory={reviewMemory}
+          actionStates={actionStates}
+          onSelectPullRequest={setSelectedPrId}
+          onPromoteCodex={promoteCodexReaction}
+          onMarkReady={markReady}
+          onSmartMerge={smartMerge}
+          onSelectNext={() => navigateReviewQueue(1)}
+          onSelectPrevious={() => navigateReviewQueue(-1)}
+          onCopySessionBrief={copyReviewSessionBrief}
+          onOpenStackReviewNavigator={openStackReviewNavigator}
+          onOpenChangeRadar={openChangeRadar}
+        />
+
+        <details
+          className="secondary-systems gittrack-secondary-systems"
+          open={secondarySystemsOpen}
+          onToggle={(event) => setSecondarySystemsOpen(event.currentTarget.open)}
+        >
+          <summary>
+            <span>Secondary systems</span>
+            <strong>Stack topology, review matrix, branch drift, change radar, autopilot</strong>
+            <em>{secondarySystemsOpen ? "Hide" : "Show"}</em>
+          </summary>
+          <div className="secondary-systems-body">
+            <StackTopologyBoard
+              activeRepo={activeRepo}
+              pullRequests={repoPullRequests}
+              branches={repoBranches}
+              reviewMemory={reviewMemory}
+              selectedPrId={selectedPr?.id}
+              onSelectPullRequest={setSelectedPrId}
+              onPromoteCodex={promoteCodexReaction}
+              onSmartMerge={smartMerge}
+              onOpenBranchDrift={openBranchDriftBoard}
+              onOpenStackReview={openStackReviewNavigator}
+              onCopyTopologyPlan={copyStackTopologyPlan}
+            />
+
+            <ReviewSignalMatrix
+              activeRepo={activeRepo}
+              pullRequests={repoPullRequests}
+              branches={repoBranches}
+              reviewMemory={reviewMemory}
+              selectedPrId={selectedPr?.id}
+              onSelectPullRequest={setSelectedPrId}
+              onPromoteCodex={promoteCodexReaction}
+              onMarkReady={markReady}
+              onOpenChangeRadar={openChangeRadar}
+              onCopyMatrix={copyReviewMatrix}
+            />
+
+            <BranchDriftBoard
+              activeRepo={activeRepo}
+              branches={repoBranches}
+              pullRequests={repoPullRequests}
+              selectedPrId={selectedPr?.id}
+              onOpenPullRequest={openAttentionPullRequest}
+              onCopyDriftPlan={copyBranchDriftPlan}
+              onOpenChangeRadar={openChangeRadar}
+            />
+
+            <ChangeRadarCenter
+              repos={data.repos}
+              pullRequests={data.pullRequests}
+              branches={data.branches}
+              activity={data.activity}
+              reviewMemory={reviewMemory}
+              memory={changeRadar}
+              selectedPrId={selectedPr?.id}
+              onModeChange={changeRadarMode}
+              onAcknowledgeSignal={acknowledgeChangeSignal}
+              onCheckpoint={checkpointChangeRadar}
+              onToggleTrackedPr={toggleTrackedChangePr}
+              onCopySweep={copyChangeRadarSweep}
+              onOpenPullRequest={openAttentionPullRequest}
+              onOpenRepo={switchRepoScope}
+              onPromoteCodex={promoteCodexReaction}
+              onMarkReady={markReady}
+            />
+
+            <AutopilotPlaybookCenter
+              repos={data.repos}
+              pullRequests={data.pullRequests}
+              reviewMemory={reviewMemory}
+              reviewThreads={reviewThreads}
+              memory={autopilotPlaybook}
+              onSelectPlaybook={selectAutopilotPlaybook}
+              onRunPlaybook={runAutopilotPlaybook}
+              onToggleStep={toggleAutopilotStep}
+              onCopyPlaybook={copyAutopilotPlaybook}
+              onOpenStackNavigator={openStackReviewNavigator}
+              onOpenThreadResolver={openReviewThreadResolver}
+              onOpenBatchCart={openBatchCommandCart}
+              onOpenDailyDigest={openDailyDigest}
+              onOpenDecisionSimulator={openDecisionSimulator}
+              onOpenTriageBoard={openTriageBoard}
+              onPromoteCodex={promoteCodexReaction}
+              onMarkReady={markReady}
+            />
+          </div>
+        </details>
+      </section>
+
+      <NotificationCenter
+        open={notificationOpen}
+        signals={notificationSignals}
+        seenSignalIds={notificationSeenIds}
+        onClose={() => setNotificationOpen(false)}
+        onMarkSeen={(id) => setNotificationSeenIds((current) => [id, ...current.filter((item) => item !== id)].slice(0, 240))}
+        onMarkAllSeen={(ids) => setNotificationSeenIds((current) => [...new Set([...ids, ...current])].slice(0, 240))}
+        onOpenPullRequest={openAttentionPullRequest}
+        onOpenRepo={switchRepoScope}
+        onPromoteCodex={promoteCodexReaction}
+        onMarkReady={markReady}
+        onOpenChangeRadar={openChangeRadar}
+      />
+
+      <RepoScopePopover
+        open={repoScopeOpen}
+        repos={data.repos}
+        activeRepo={activeRepo}
+        source={source}
+        pullRequests={data.pullRequests}
+        branches={data.branches}
+        reviewMemory={reviewMemory}
+        onClose={() => setRepoScopeOpen(false)}
+        onSelectRepo={switchRepoScope}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenConnectionCenter={openConnectionCenter}
       />
 
       <CommandPalette
@@ -1963,7 +2208,7 @@ export default function App() {
         onPromoteCodex={() => selectedPr && promoteCodexReaction(selectedPr.id)}
         onPinSelected={() => selectedPr && toggleReviewPin(selectedPr.id)}
         onSnoozeSelected={() => selectedPr && snoozeReview(selectedPr.id)}
-        onMarkReady={() => selectedPr && setReviewDecision(selectedPr.id, "ready")}
+        onMarkReady={() => selectedPr && markReady(selectedPr.id)}
         onSetQuery={setQuery}
         onSmartMerge={() => selectedPr && smartMerge(selectedPr.id)}
         onRunAutomationPlan={runAutomationPlan}
@@ -2208,6 +2453,18 @@ function loadStoredMergeImpact(): MergeImpactMemoryByRepo {
     ) as MergeImpactMemoryByRepo;
   } catch {
     return {};
+  }
+}
+
+function loadStoredMergeQueue(): MergeQueueMemory {
+  try {
+    const raw = readDatabaseValue(MERGE_QUEUE_KEY);
+    if (!raw) return createMergeQueue();
+
+    const saved = JSON.parse(raw) as unknown;
+    return isMergeQueueMemory(saved) ? saved : createMergeQueue();
+  } catch {
+    return createMergeQueue();
   }
 }
 
@@ -2498,6 +2755,17 @@ function createStackReviewNavigator(seed: Partial<StackReviewNavigatorMemory> = 
   };
 }
 
+function createMergeQueue(seed: Partial<MergeQueueMemory> = {}): MergeQueueMemory {
+  return {
+    queuedPrIds: Array.isArray(seed.queuedPrIds)
+      ? seed.queuedPrIds.filter((id) => typeof id === "string").slice(0, 80)
+      : [],
+    queuedAtByPr: isStringRecord(seed.queuedAtByPr) ? seed.queuedAtByPr : {},
+    blockedByPr: isStringRecord(seed.blockedByPr) ? seed.blockedByPr : {},
+    updatedAt: typeof seed.updatedAt === "string" ? seed.updatedAt : new Date(0).toISOString(),
+  };
+}
+
 function createAutopilotPlaybook(seed: Partial<AutopilotPlaybookMemory> = {}): AutopilotPlaybookMemory {
   return {
     activePlaybookId: isAutopilotPlaybookId(seed.activePlaybookId) ? seed.activePlaybookId : "morning_review",
@@ -2714,6 +2982,28 @@ function isMergeImpactMemory(value: unknown): value is MergeImpactMemory {
     Array.isArray(candidate.selectedPrIds) &&
     candidate.selectedPrIds.every((id) => typeof id === "string") &&
     typeof candidate.updatedAt === "string"
+  );
+}
+
+function isMergeQueueMemory(value: unknown): value is MergeQueueMemory {
+  if (!value || typeof value !== "object") return false;
+
+  const candidate = value as Partial<MergeQueueMemory>;
+  return (
+    Array.isArray(candidate.queuedPrIds) &&
+    candidate.queuedPrIds.every((id) => typeof id === "string") &&
+    isStringRecord(candidate.queuedAtByPr) &&
+    isStringRecord(candidate.blockedByPr) &&
+    typeof candidate.updatedAt === "string"
+  );
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      Object.values(value).every((entry) => typeof entry === "string"),
   );
 }
 
@@ -3053,6 +3343,32 @@ function applyPrFilters(
   });
 }
 
+function buildActionStates(
+  pullRequests: PullRequestSummary[],
+  branches: BranchSummary[],
+  reviewMemory: ReviewMemoryByPr,
+): Record<string, PullRequestActionState> {
+  return Object.fromEntries(
+    pullRequests.map((pr) => [
+      pr.id,
+      getPullRequestActionState(pr, findBranchForPullRequest(branches, pr), reviewMemory[pr.id]),
+    ]),
+  );
+}
+
+function omitRecordKey(record: Record<string, string>, key: string) {
+  const next = { ...record };
+  delete next[key];
+  return next;
+}
+
+function appendReviewNote(note: string | undefined, line: string) {
+  const trimmed = note?.trim();
+  if (!trimmed) return line;
+  if (trimmed.includes(line)) return trimmed;
+  return `${trimmed}\n${line}`;
+}
+
 function formatBriefForClipboard(brief: ShipRoomBriefSnapshot) {
   return [
     brief.title,
@@ -3273,38 +3589,6 @@ function buildFilters(prs: PullRequestSummary[]): FilterItem[] {
       count: prs.filter((pr) => pr.ci === "failure" || pr.state === "changes_requested").length,
     },
   ];
-}
-
-function promoteCodex(pr: PullRequestSummary): CodexSignal {
-  const event: ReviewEvent = {
-    id: `codex-promoted-${Date.now()}`,
-    reviewer: { login: "Codex", role: "Bot", isCodex: true },
-    state: "approved",
-    reaction: "thumbs_up",
-    body: "Reaction moved from eyes to thumbs up.",
-    submittedAt: new Date().toISOString(),
-  };
-
-  const previousEvents = pr.codex.events.length
-    ? pr.codex.events
-    : [
-        {
-          id: `codex-eyes-${Date.now()}`,
-          reviewer: { login: "Codex", role: "Bot", isCodex: true },
-          state: "commented" as const,
-          reaction: "eyes" as const,
-          body: "Codex reviewed this PR.",
-          submittedAt: new Date(Date.now() - 10 * 60_000).toISOString(),
-        },
-      ];
-
-  return {
-    exists: true,
-    reaction: "changed",
-    statusText: "Changed from eyes to thumbs up",
-    lastSeenAt: event.submittedAt,
-    events: [...previousEvents, event],
-  };
 }
 
 type WorkspacePanel =
