@@ -2,76 +2,89 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock3,
+  Copy,
   GitMerge,
   GitPullRequest,
   Play,
   ShieldCheck,
 } from "lucide-react";
-import { PullRequestSummary, ReviewMemoryByPr } from "../types";
 import { getPrIntelligence } from "../lib/insights";
+import { findBranchForPullRequest, getPullRequestActionState, type PullRequestActionState } from "../lib/prActions";
+import type { BranchSummary, MergeQueueMemory, PullRequestSummary, ReviewMemoryByPr } from "../types";
 import { CiBadge, formatRelativeTime, MiniCheck, StatusPill } from "./ui";
 
 interface MergeQueueTimelineProps {
   pullRequests: PullRequestSummary[];
+  branches: BranchSummary[];
   reviewMemory: ReviewMemoryByPr;
+  mergeQueue: MergeQueueMemory;
   selectedId?: string;
   onSelectPullRequest: (id: string) => void;
   onRunQueue: () => void;
   onSmartMerge: (id: string) => void;
+  onCopyTrainPlan: (text: string, count: number) => void;
 }
 
-type QueuePhase = "intake" | "review" | "checks" | "queued" | "blocked";
+type QueuePhase = "queued" | "ready" | "work" | "blocked";
 
 interface QueueItem {
   pr: PullRequestSummary;
+  branch?: BranchSummary;
+  actionState: PullRequestActionState;
   phase: QueuePhase;
   readiness: number;
   readinessTotal: number;
   blockers: string[];
   eta: string;
   memoryDecision: string;
+  queuedAt?: string;
 }
 
 const phases: Array<{ id: QueuePhase; label: string }> = [
-  { id: "intake", label: "Intake" },
-  { id: "review", label: "Review" },
-  { id: "checks", label: "Checks" },
   { id: "queued", label: "Queued" },
+  { id: "ready", label: "Ready" },
+  { id: "work", label: "Needs work" },
+  { id: "blocked", label: "Blocked" },
 ];
 
 export function MergeQueueTimeline({
   pullRequests,
+  branches,
   reviewMemory,
+  mergeQueue,
   selectedId,
   onSelectPullRequest,
   onRunQueue,
   onSmartMerge,
+  onCopyTrainPlan,
 }: MergeQueueTimelineProps) {
-  const queue = pullRequests
-    .map((pr, index) => buildQueueItem(pr, index, reviewMemory))
-    .sort((a, b) => {
-      const phaseWeight = phaseScore(b.phase) - phaseScore(a.phase);
-      if (phaseWeight !== 0) return phaseWeight;
-      return b.readiness - a.readiness;
-    });
+  const queue = buildQueue(pullRequests, branches, reviewMemory, mergeQueue);
   const selected = queue.find((item) => item.pr.id === selectedId) ?? queue[0];
-  const readyCount = queue.filter((item) => item.phase === "queued").length;
+  const queuedCount = queue.filter((item) => item.phase === "queued").length;
+  const readyCount = queue.filter((item) => item.phase === "ready").length;
   const blockedCount = queue.filter((item) => item.phase === "blocked").length;
-  const trainEta = readyCount ? `${Math.max(4, readyCount * 3)}m` : "waiting";
+  const trainEta = queuedCount ? `${Math.max(4, queuedCount * 3)}m` : readyCount ? `${Math.max(6, readyCount * 4)}m` : "waiting";
+  const plan = formatMergeTrainPlan(queue);
 
   return (
     <section className="merge-queue-timeline" id="merge-queue-timeline" data-testid="merge-queue-timeline">
       <div className="queue-timeline-head">
         <div>
           <span>Merge train</span>
-          <h2>{readyCount} PRs ready for the next departure</h2>
-          <p>{blockedCount} blocked by review gates, memory decisions, or CI.</p>
+          <h2>{queuedCount ? `${queuedCount} PRs staged for departure` : `${readyCount} PRs ready to stage`}</h2>
+          <p>{blockedCount} blocked by CI, review, draft, branch drift, or a local queue decision.</p>
         </div>
-        <button onClick={onRunQueue}>
-          <Play size={15} />
-          <span>Run train</span>
-          <kbd>{trainEta}</kbd>
-        </button>
+        <div className="queue-train-actions">
+          <button type="button" className="queue-plan-button" onClick={() => onCopyTrainPlan(plan, queue.length)}>
+            <Copy size={15} />
+            <span>Copy plan</span>
+          </button>
+          <button type="button" onClick={onRunQueue}>
+            <Play size={15} />
+            <span>Run train</span>
+            <kbd>{trainEta}</kbd>
+          </button>
+        </div>
       </div>
 
       <div className="queue-stage-rail" aria-label="Merge queue stages">
@@ -96,11 +109,11 @@ export function MergeQueueTimeline({
         <div className="train-order">
           <div className="queue-panel-title">
             <GitMerge size={15} />
-            <strong>Next merge order</strong>
+            <strong>Departure order</strong>
             <span>{queue.length} active</span>
           </div>
           <div className="train-list">
-            {queue.slice(0, 6).map((item, index) => (
+            {queue.slice(0, 7).map((item, index) => (
               <button
                 type="button"
                 key={item.pr.id}
@@ -110,8 +123,9 @@ export function MergeQueueTimeline({
                 <span className="train-index">{index + 1}</span>
                 <span className="train-copy">
                   <strong>#{item.pr.number} {item.pr.title}</strong>
-                  <small>{item.memoryDecision} · updated {formatRelativeTime(item.pr.updatedAt)}</small>
+                  <small>{trainRowDetail(item)}</small>
                 </span>
+                <span className={`queue-kicker ${item.phase}`}>{phaseLabel(item.phase)}</span>
                 <span className="train-readiness">{item.readiness}/{item.readinessTotal}</span>
                 <span className="train-eta">{item.eta}</span>
               </button>
@@ -127,11 +141,11 @@ export function MergeQueueTimeline({
           </div>
           {selected && (
             <div className="gate-list">
+              <GateRow label="Queue state" ready={selected.phase === "queued" || selected.phase === "ready"} detail={phaseLabel(selected.phase)} />
               <GateRow label="CI checks" ready={selected.pr.ci === "success"} detail={selected.pr.ciSummary} />
-              <GateRow label="Review state" ready={selected.pr.state === "approved" || selected.pr.reviewers.length > 0} detail={selected.pr.state.replace("_", " ")} />
-              <GateRow label="Codex signal" ready={selected.pr.codex.exists} detail={selected.pr.codex.statusText} />
+              <GateRow label="Review state" ready={selected.actionState.hasReadySignal} detail={selected.pr.state.replace("_", " ")} />
+              <GateRow label="Branch drift" ready={selected.actionState.branchClean} detail={branchDetail(selected)} />
               <GateRow label="Your decision" ready={selected.memoryDecision === "ready"} detail={selected.memoryDecision} />
-              <GateRow label="Stack health" ready={selected.blockers.length === 0} detail={selected.blockers[0] ?? "clear"} />
             </div>
           )}
         </div>
@@ -143,7 +157,7 @@ export function MergeQueueTimeline({
             <span>{blockedCount} hot</span>
           </div>
           <div className="blocker-list">
-            {queue.filter((item) => item.blockers.length).slice(0, 4).map((item) => (
+            {queue.filter((item) => item.blockers.length).slice(0, 5).map((item) => (
               <button type="button" key={item.pr.id} onClick={() => onSelectPullRequest(item.pr.id)}>
                 <GitPullRequest size={14} />
                 <span>#{item.pr.number}</span>
@@ -159,7 +173,7 @@ export function MergeQueueTimeline({
             )}
           </div>
           {selected && (
-            <button className="queue-merge-button" onClick={() => onSmartMerge(selected.pr.id)}>
+            <button className="queue-merge-button" onClick={() => onSmartMerge(selected.pr.id)} disabled={!selected.actionState.canQueueMerge}>
               <GitMerge size={15} />
               Queue selected PR
               <CiBadge state={selected.pr.ci} />
@@ -181,48 +195,126 @@ function GateRow({ label, ready, detail }: { label: string; ready: boolean; deta
   );
 }
 
-function buildQueueItem(pr: PullRequestSummary, index: number, memoryByPr: ReviewMemoryByPr): QueueItem {
+function buildQueue(
+  pullRequests: PullRequestSummary[],
+  branches: BranchSummary[],
+  reviewMemory: ReviewMemoryByPr,
+  mergeQueue: MergeQueueMemory,
+) {
+  const queuedOrder = new Map(mergeQueue.queuedPrIds.map((id, index) => [id, index]));
+
+  return pullRequests
+    .map((pr, index) => buildQueueItem(pr, index, branches, reviewMemory, mergeQueue, queuedOrder))
+    .sort((a, b) => {
+      const phaseWeight = phaseScore(a.phase) - phaseScore(b.phase);
+      if (phaseWeight !== 0) return phaseWeight;
+      const queuedA = queuedOrder.get(a.pr.id) ?? Number.MAX_SAFE_INTEGER;
+      const queuedB = queuedOrder.get(b.pr.id) ?? Number.MAX_SAFE_INTEGER;
+      if (queuedA !== queuedB) return queuedA - queuedB;
+      return b.readiness - a.readiness || new Date(b.pr.updatedAt).getTime() - new Date(a.pr.updatedAt).getTime();
+    });
+}
+
+function buildQueueItem(
+  pr: PullRequestSummary,
+  index: number,
+  branches: BranchSummary[],
+  memoryByPr: ReviewMemoryByPr,
+  mergeQueue: MergeQueueMemory,
+  queuedOrder: Map<string, number>,
+): QueueItem {
   const intel = getPrIntelligence(pr, index);
   const memory = memoryByPr[pr.id];
+  const branch = findBranchForPullRequest(branches, pr);
+  const actionState = getPullRequestActionState(pr, branch, memory);
   const snoozed = Boolean(memory?.snoozedUntil && new Date(memory.snoozedUntil).getTime() > Date.now());
+  const queuedAt = mergeQueue.queuedAtByPr[pr.id];
+  const localBlock = mergeQueue.blockedByPr[pr.id];
+  const gateBlock = isWorkReason(actionState.blockedReason) ? "" : actionState.blockedReason ?? "";
   const blockers = [
-    pr.isDraft ? "draft PR" : "",
-    pr.ci === "failure" ? "CI failing" : "",
-    pr.ci === "pending" ? "checks pending" : "",
-    pr.state === "changes_requested" ? "changes requested" : "",
-    pr.reviewers.length === 0 ? "needs reviewer" : "",
-    !pr.codex.exists ? "Codex missing" : "",
-    memory?.decision === "blocked" ? "manual block" : "",
-    snoozed ? "snoozed" : "",
-  ].filter(Boolean);
+    localBlock ?? "",
+    gateBlock,
+    snoozed ? "Snoozed from review queue." : "",
+    memory?.decision === "blocked" ? "Blocked by your local decision." : "",
+  ].filter(uniqueTruthy);
   const memoryDecision = memory?.decision ?? "watch";
-  const readyByDecision = memoryDecision === "ready";
-  const readyBySignals = intel.readiness >= intel.readinessTotal - 1 && pr.ci === "success";
-  const phase = blockers.length
-    ? "blocked"
-    : readyByDecision || readyBySignals || pr.state === "approved"
-      ? "queued"
-      : pr.state === "waiting_review"
-        ? "review"
-        : pr.ci === "pending"
-          ? "checks"
-          : "intake";
+  const phase = pickQueuePhase(Boolean(queuedAt || queuedOrder.has(pr.id)), actionState, blockers, memoryDecision);
 
   return {
     pr,
+    branch,
+    actionState,
     phase,
     readiness: intel.readiness,
     readinessTotal: intel.readinessTotal,
     blockers,
-    eta: phase === "queued" ? `${Math.max(2, 7 - index)}m` : intel.queueEstimate,
+    eta: phase === "queued" ? `${Math.max(2, 5 + (queuedOrder.get(pr.id) ?? index) * 2)}m` : intel.queueEstimate,
     memoryDecision,
+    queuedAt,
   };
 }
 
+function pickQueuePhase(
+  queued: boolean,
+  actionState: PullRequestActionState,
+  blockers: string[],
+  memoryDecision: string,
+): QueuePhase {
+  if (blockers.length) return "blocked";
+  if (queued && actionState.canQueueMerge) return "queued";
+  if (actionState.canQueueMerge) return "ready";
+  if (memoryDecision === "blocked") return "blocked";
+  return "work";
+}
+
+function uniqueTruthy(value: string, index: number, values: string[]) {
+  return Boolean(value) && values.indexOf(value) === index;
+}
+
 function phaseScore(phase: QueuePhase) {
-  if (phase === "queued") return 5;
-  if (phase === "checks") return 4;
-  if (phase === "review") return 3;
-  if (phase === "intake") return 2;
-  return 1;
+  if (phase === "queued") return 1;
+  if (phase === "ready") return 2;
+  if (phase === "work") return 3;
+  return 4;
+}
+
+function phaseLabel(phase: QueuePhase) {
+  if (phase === "queued") return "Queued";
+  if (phase === "ready") return "Ready";
+  if (phase === "work") return "Needs work";
+  return "Blocked";
+}
+
+function trainRowDetail(item: QueueItem) {
+  if (item.queuedAt) return `queued ${formatRelativeTime(item.queuedAt)} - ${item.pr.branch}`;
+  if (item.blockers[0]) return `${item.blockers[0]} - updated ${formatRelativeTime(item.pr.updatedAt)}`;
+  if (item.actionState.blockedReason) return `${item.actionState.blockedReason} - updated ${formatRelativeTime(item.pr.updatedAt)}`;
+  return `${item.memoryDecision} - updated ${formatRelativeTime(item.pr.updatedAt)}`;
+}
+
+function isWorkReason(reason?: string) {
+  return Boolean(reason?.startsWith("Needs approval"));
+}
+
+function branchDetail(item: QueueItem) {
+  if (!item.branch) return "unknown";
+  return `${item.branch.ahead} ahead / ${item.branch.behind} behind ${item.pr.base}`;
+}
+
+function formatMergeTrainPlan(queue: QueueItem[]) {
+  const queued = queue.filter((item) => item.phase === "queued");
+  const ready = queue.filter((item) => item.phase === "ready");
+  const blocked = queue.filter((item) => item.phase === "blocked");
+  const lead = queued.length ? queued : ready;
+
+  return [
+    "Merge train plan",
+    `Generated ${new Date().toLocaleString()}`,
+    "",
+    lead.length ? "Departure order:" : "No PRs are ready to depart.",
+    ...lead.map((item, index) => `${index + 1}. #${item.pr.number} ${item.pr.title} - ${branchDetail(item)} - ${item.pr.ciSummary}`),
+    "",
+    blocked.length ? "Blockers:" : "Blockers: none",
+    ...blocked.slice(0, 8).map((item) => `- #${item.pr.number}: ${item.blockers[0] ?? "blocked"}`),
+  ].join("\n");
 }

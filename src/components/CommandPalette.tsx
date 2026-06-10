@@ -52,6 +52,7 @@ interface CommandPaletteProps {
   onOpenStackReviewNavigator: () => void;
   onOpenReviewThreadResolver: () => void;
   onOpenAutopilotPlaybook: () => void;
+  onOpenMergeQueueTimeline: () => void;
   onOpenTriageBoard: () => void;
   onOpenWorkspaceBrief: () => void;
   onOpenLaunchStudio: () => void;
@@ -104,6 +105,7 @@ export function CommandPalette({
   onOpenStackReviewNavigator,
   onOpenReviewThreadResolver,
   onOpenAutopilotPlaybook,
+  onOpenMergeQueueTimeline,
   onOpenTriageBoard,
   onOpenWorkspaceBrief,
   onOpenLaunchStudio,
@@ -125,6 +127,17 @@ export function CommandPalette({
         tone: "green",
         icon: GitMerge,
         action: onSmartMerge,
+      },
+      {
+        type: "command",
+        id: "merge-train",
+        label: "Open merge train cockpit",
+        detail: "Inspect the persisted train, blocked gates, ready departures, and copy the ship plan.",
+        shortcut: "M",
+        keywords: "merge train cockpit queue timeline ship plan blocked ready staged",
+        tone: "green",
+        icon: GitMerge,
+        action: onOpenMergeQueueTimeline,
       },
       {
         type: "command",
@@ -413,6 +426,7 @@ export function CommandPalette({
       onOpenLaunchStudio,
       onOpenConnectionCenter,
       onOpenLocalGit,
+      onOpenMergeQueueTimeline,
       onOpenTriageBoard,
       onOpenWorkspaceBrief,
       onPinSelected,
@@ -431,6 +445,7 @@ export function CommandPalette({
       "pin",
       "snooze",
       "automation",
+      "merge-train",
       "stack-topology",
       "local-git",
       "connection-center",

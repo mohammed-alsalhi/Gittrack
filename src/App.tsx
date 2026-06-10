@@ -1760,21 +1760,30 @@ export default function App() {
   };
 
   const runMergeQueueTrain = () => {
-    const ready = repoPullRequests.filter((pr) => {
-      const memory = reviewMemory[pr.id];
-      const snoozed = Boolean(memory?.snoozedUntil && new Date(memory.snoozedUntil).getTime() > Date.now());
-      return (
-        (memory?.decision === "ready" || pr.state === "approved") &&
-        pr.ci === "success" &&
-        memory?.decision !== "blocked" &&
-        !snoozed &&
-        !pr.isDraft
-      );
-    });
+    const queued = mergeQueue.queuedPrIds
+      .map((id) => repoPullRequests.find((pr) => pr.id === id))
+      .filter((pr): pr is PullRequestSummary => Boolean(pr))
+      .filter((pr) => getActionStateForPr(pr).canQueueMerge);
+    const ready = queued.length
+      ? queued
+      : repoPullRequests.filter((pr) => getActionStateForPr(pr).canQueueMerge).slice(0, 8);
+
+    if (!queued.length && ready.length) {
+      const now = new Date().toISOString();
+      setMergeQueue((current) => ({
+        queuedPrIds: [...ready.map((pr) => pr.id), ...current.queuedPrIds.filter((id) => !ready.some((pr) => pr.id === id))].slice(0, 80),
+        queuedAtByPr: {
+          ...current.queuedAtByPr,
+          ...Object.fromEntries(ready.map((pr) => [pr.id, now])),
+        },
+        blockedByPr: current.blockedByPr,
+        updatedAt: now,
+      }));
+    }
 
     setLastAction(
       ready.length
-        ? `Merge train staged ${ready.length} PRs: ${ready.map((pr) => `#${pr.number}`).join(", ")}.`
+        ? `Merge train ${queued.length ? "running" : "staged"} ${ready.length} PRs: ${ready.map((pr) => `#${pr.number}`).join(", ")}.`
         : "Merge train is waiting for a ready, unsnoozed PR with green CI.",
     );
     setPaletteOpen(false);
@@ -1905,6 +1914,13 @@ export default function App() {
       void navigator.clipboard.writeText(text).catch(() => undefined);
     }
     setLastAction(count ? `Copied merge impact plan for ${count} ${pluralize("PR", count)}.` : "Copied empty merge impact plan.");
+  };
+
+  const copyMergeTrainPlan = (text: string, count: number) => {
+    if (navigator.clipboard) {
+      void navigator.clipboard.writeText(text).catch(() => undefined);
+    }
+    setLastAction(count ? `Copied merge train plan for ${count} ${pluralize("PR", count)}.` : "Copied empty merge train plan.");
   };
 
   const commitReleaseForecast = (forecast: ReleaseForecastSnapshot) => {
@@ -2196,6 +2212,24 @@ export default function App() {
         onOpenConnectionCenter={openConnectionCenter}
       />
 
+      <LazyFeature
+        label="Merge train"
+        open={operatingPanelsOpen}
+        onOpenChange={setOperatingPanelsOpen}
+      >
+        <MergeQueueTimeline
+          pullRequests={repoPullRequests}
+          branches={repoBranches}
+          reviewMemory={reviewMemory}
+          mergeQueue={mergeQueue}
+          selectedId={selectedPr?.id}
+          onSelectPullRequest={setSelectedPrId}
+          onRunQueue={runMergeQueueTrain}
+          onSmartMerge={smartMerge}
+          onCopyTrainPlan={copyMergeTrainPlan}
+        />
+      </LazyFeature>
+
       <CommandPalette
         open={paletteOpen}
         pullRequests={repoPullRequests}
@@ -2227,6 +2261,7 @@ export default function App() {
         onOpenStackReviewNavigator={openStackReviewNavigator}
         onOpenReviewThreadResolver={openReviewThreadResolver}
         onOpenAutopilotPlaybook={openAutopilotPlaybookCenter}
+        onOpenMergeQueueTimeline={openMergeQueueTimeline}
         onOpenTriageBoard={openTriageBoard}
         onModeChange={(mode) => {
           changeWorkMode(mode);
@@ -2265,7 +2300,7 @@ function LazyFeature({
       >
         <summary>
           <span>Advanced panels</span>
-          <strong>Stack review, triage, digests, connection tools</strong>
+          <strong>{label} cockpit, staged queues, and ship plan</strong>
           <em>{open ? "Hide" : "Show"}</em>
         </summary>
         <div className="operating-panels-body">

@@ -9002,6 +9002,18 @@ body {
   white-space: nowrap;
 }
 
+.queue-train-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.queue-timeline-head .queue-plan-button {
+  border-color: #3d3a44;
+  background: transparent;
+  color: #f4f1f8;
+}
+
 .queue-timeline-head kbd {
   border-radius: 5px;
   background: rgba(17, 17, 19, 0.12);
@@ -9079,10 +9091,19 @@ body {
   color: #8eefaa;
 }
 
-.stage-review strong,
-.stage-checks strong {
+.stage-ready strong {
+  background: rgba(60, 120, 255, 0.16);
+  color: #9dbbff;
+}
+
+.stage-work strong {
   background: rgba(241, 184, 98, 0.15);
   color: #ffd18d;
+}
+
+.stage-blocked strong {
+  background: rgba(255, 119, 131, 0.14);
+  color: #ff9da6;
 }
 
 .queue-timeline-body {
@@ -9136,7 +9157,7 @@ body {
 
 .train-row {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) 48px 42px;
+  grid-template-columns: 26px minmax(0, 1fr) 74px 48px 42px;
   align-items: center;
   gap: 8px;
   min-height: 42px;
@@ -9173,6 +9194,16 @@ body {
 .phase-queued .train-index {
   background: rgba(114, 219, 143, 0.14);
   color: #8eefaa;
+}
+
+.phase-ready .train-index {
+  background: rgba(60, 120, 255, 0.16);
+  color: #9dbbff;
+}
+
+.phase-work .train-index {
+  background: rgba(241, 184, 98, 0.15);
+  color: #ffd18d;
 }
 
 .phase-blocked .train-index {
@@ -9214,6 +9245,44 @@ body {
 
 .train-eta {
   color: #a7a1ff;
+}
+
+.queue-kicker {
+  justify-self: end;
+  display: inline-grid;
+  place-items: center;
+  min-width: 0;
+  max-width: 74px;
+  height: 22px;
+  border: 1px solid #3b3943;
+  border-radius: 999px;
+  color: #c7c2ce;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 840;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-kicker.queued {
+  border-color: rgba(114, 219, 143, 0.25);
+  color: #8eefaa;
+}
+
+.queue-kicker.ready {
+  border-color: rgba(60, 120, 255, 0.32);
+  color: #9dbbff;
+}
+
+.queue-kicker.work {
+  border-color: rgba(241, 184, 98, 0.28);
+  color: #ffd18d;
+}
+
+.queue-kicker.blocked {
+  border-color: rgba(255, 119, 131, 0.25);
+  color: #ff9da6;
 }
 
 .gate-row {
@@ -9310,6 +9379,12 @@ body {
   border-color: #3d3a44;
   background: #242329;
   color: #f4f1f8;
+}
+
+.queue-merge-button:disabled {
+  color: #77717f;
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 @media (max-width: 1380px) and (min-width: 1181px) {
@@ -9976,6 +10051,12 @@ body {
   }
 
   .queue-timeline-head button {
+    width: 100%;
+  }
+
+  .queue-train-actions {
+    display: grid;
+    grid-template-columns: 1fr;
     width: 100%;
   }
 
